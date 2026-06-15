@@ -1,0 +1,160 @@
+[
+  {
+    "id": "safe-eth-usdc",
+    "label": "Safe ETH -> USDC swap",
+    "prompt": "Swap 0.2 ETH to USDC safely with low slippage.",
+    "parsedIntent": {
+      "action": "swap",
+      "tokenIn": "ETH",
+      "tokenOut": "USDC",
+      "amount": "0.2",
+      "chain": "Base Sepolia",
+      "priority": "safety",
+      "constraints": {
+        "maxSlippage": "0.5%",
+        "riskTolerance": "low"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 18,
+      "liquidityRisk": 14,
+      "priceImpactRisk": 12,
+      "gasRisk": 22,
+      "tokenRisk": 8,
+      "routeComplexityRisk": 12,
+      "mevExposureRisk": 20
+    },
+    "notes": ["Blue-chip pair", "Small notional size", "Low-slippage constraint detected"]
+  },
+  {
+    "id": "high-slippage",
+    "label": "High-slippage risky swap",
+    "prompt": "Swap 1 ETH to USDC fast and allow high slippage.",
+    "parsedIntent": {
+      "action": "swap",
+      "tokenIn": "ETH",
+      "tokenOut": "USDC",
+      "amount": "1",
+      "chain": "Base Sepolia",
+      "priority": "speed",
+      "constraints": {
+        "maxSlippage": "5%",
+        "riskTolerance": "medium"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 72,
+      "liquidityRisk": 24,
+      "priceImpactRisk": 38,
+      "gasRisk": 42,
+      "tokenRisk": 10,
+      "routeComplexityRisk": 22,
+      "mevExposureRisk": 68
+    },
+    "notes": ["High slippage increases adverse execution risk", "Speed priority increases MEV exposure"]
+  },
+  {
+    "id": "unknown-token",
+    "label": "Unknown token",
+    "prompt": "Swap 0.5 ETH to MOONSAFE.",
+    "parsedIntent": {
+      "action": "swap",
+      "tokenIn": "ETH",
+      "tokenOut": "MOONSAFE",
+      "amount": "0.5",
+      "chain": "Base Sepolia",
+      "priority": "safety",
+      "constraints": {
+        "riskTolerance": "low"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 64,
+      "liquidityRisk": 76,
+      "priceImpactRisk": 70,
+      "gasRisk": 32,
+      "tokenRisk": 88,
+      "routeComplexityRisk": 48,
+      "mevExposureRisk": 66
+    },
+    "notes": ["Token is not in the allowlist", "Liquidity and price impact are simulated as risky"]
+  },
+  {
+    "id": "large-trade-mev",
+    "label": "Large trade with MEV exposure",
+    "prompt": "Swap 25 ETH to USDC with best price.",
+    "parsedIntent": {
+      "action": "swap",
+      "tokenIn": "ETH",
+      "tokenOut": "USDC",
+      "amount": "25",
+      "chain": "Base Sepolia",
+      "priority": "cost",
+      "constraints": {
+        "riskTolerance": "medium"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 66,
+      "liquidityRisk": 58,
+      "priceImpactRisk": 74,
+      "gasRisk": 36,
+      "tokenRisk": 8,
+      "routeComplexityRisk": 44,
+      "mevExposureRisk": 82
+    },
+    "notes": ["Large notional may create price impact", "Split-order route should be considered"]
+  },
+  {
+    "id": "unsupported-bridge",
+    "label": "Unsupported bridge request",
+    "prompt": "Bridge 0.3 ETH from Ethereum to Solana.",
+    "parsedIntent": {
+      "action": "bridge",
+      "tokenIn": "ETH",
+      "amount": "0.3",
+      "chain": "Ethereum to Solana",
+      "priority": "safety",
+      "constraints": {
+        "riskTolerance": "low"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 70,
+      "liquidityRisk": 62,
+      "priceImpactRisk": 55,
+      "gasRisk": 68,
+      "tokenRisk": 35,
+      "routeComplexityRisk": 92,
+      "mevExposureRisk": 50
+    },
+    "notes": ["Cross-chain execution is outside v0 scope", "Treat as analysis-only"]
+  },
+  {
+    "id": "critical-blocked",
+    "label": "Critical risk route blocked",
+    "prompt": "Swap 10 ETH to an unknown token with 20% slippage.",
+    "parsedIntent": {
+      "action": "swap",
+      "tokenIn": "ETH",
+      "tokenOut": "UNKNOWN",
+      "amount": "10",
+      "chain": "Base Sepolia",
+      "priority": "speed",
+      "constraints": {
+        "maxSlippage": "20%",
+        "riskTolerance": "high"
+      }
+    },
+    "riskFactors": {
+      "slippageRisk": 98,
+      "liquidityRisk": 94,
+      "priceImpactRisk": 92,
+      "gasRisk": 62,
+      "tokenRisk": 96,
+      "routeComplexityRisk": 86,
+      "mevExposureRisk": 90
+    },
+    "notes": ["Unknown token plus extreme slippage", "Route should be blocked in v0"]
+  }
+]

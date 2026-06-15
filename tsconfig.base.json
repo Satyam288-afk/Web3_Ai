@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sentinelmesh/agents": ["packages/agents/src/index.ts"],
+      "@sentinelmesh/risk-engine": ["packages/risk-engine/src/index.ts"],
+      "@sentinelmesh/shared": ["packages/shared/src/index.ts"],
+      "@sentinelmesh/web3": ["packages/web3/src/index.ts"]
+    }
+  }
+}
