@@ -13,6 +13,7 @@ import {
   RiskAgent,
   RouteAgent,
   VerificationAgent,
+  hashReportPayload,
   recomputeReportHash,
   runAgents,
   runRouteAgent,
@@ -51,6 +52,8 @@ import { applyMarketEvidence, inspectMarket } from "./market-intelligence.js";
 import { getQuotePreview } from "./quote-adapter.js";
 import { createReportRepository } from "./report-repository.js";
 import { decodeRawTransaction } from "./transaction-decoder.js";
+import { verifySafetyAttestation } from "./safety-attestation.js";
+import { analyzeExecutionOutcome } from "./execution-outcome.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../../..");
@@ -264,7 +267,9 @@ app.post("/api/firewall", async (req, res, next) => {
       analysis: authoritativeAnalysis,
       quote,
       decodedTransaction,
-      policy
+      policy,
+      userAddress: session?.address,
+      userChainId: session?.chainId
     });
     return res.json({ evaluation, quote, analysis: authoritativeAnalysis });
   } catch (error) {
@@ -354,7 +359,9 @@ app.post("/api/orchestrations/run", async (req, res, next) => {
       analysis: riskResult.output,
       quote: quotePreview,
       decodedTransaction,
-      policy: body.policy
+      policy: body.policy,
+      userAddress: session?.address,
+      userChainId: session?.chainId
     });
     steps.push({
       id: "firewall",
@@ -409,6 +416,18 @@ app.post("/reports", async (req, res, next) => {
       return res.status(403).json({ error: "Authenticated wallet does not match the report owner" });
     }
     const authenticatedUserAddress = body.userAddress ? session?.address : undefined;
+    if ((body.safetyEnvelope || body.safetyAttestation) && (!body.safetyEnvelope || !body.safetyAttestation)) {
+      return res.status(400).json({ error: "Safety envelope and attestation must be supplied together" });
+    }
+    if (body.safetyAttestation) {
+      if (!session || !authenticatedUserAddress) return res.status(401).json({ error: "Wallet authentication is required for signed safety envelopes" });
+      await verifySafetyAttestation({
+        envelope: body.safetyEnvelope!,
+        attestation: body.safetyAttestation,
+        expectedSigner: authenticatedUserAddress as `0x${string}`,
+        intent: body.parsedIntent
+      });
+    }
 
     const prompt = body.prompt;
     const parsedIntent = body.parsedIntent;
@@ -430,8 +449,11 @@ app.post("/reports", async (req, res, next) => {
       intent: parsedIntent,
       analysis: riskResult.output,
       quote: quotePreview,
-      policy: body.policy
+      policy: body.policy,
+      userAddress: authenticatedUserAddress as `0x${string}` | undefined,
+      userChainId: session?.chainId
     });
+    if (body.safetyEnvelope) firewallEvaluation.safetyEnvelope = body.safetyEnvelope;
 
     const reportContext: AgentContext = {
       prompt,
@@ -440,6 +462,14 @@ app.post("/reports", async (req, res, next) => {
       routeRecommendation,
       evidenceReceipt: firewallEvaluation.transactionPreview.evidence,
       firewallEvaluation,
+      safetyAttestation: body.safetyAttestation,
+      executionOutcome: {
+        status: "NOT_EXECUTED",
+        driftChecks: [],
+        summary: "No execution transaction has been attached to this safety report.",
+        analyzedAt: new Date().toISOString(),
+        source: "local"
+      },
       userAddress: authenticatedUserAddress,
       fixtures: await loadFixtures()
     };
@@ -689,6 +719,28 @@ app.post("/reports/:id/verify", async (req, res, next) => {
   }
 });
 
+app.post("/reports/:id/outcome", async (req, res, next) => {
+  try {
+    const transactionHash = req.body?.transactionHash;
+    if (!isHash(transactionHash)) return res.status(400).json({ error: "A valid execution transaction hash is required" });
+    const { repository } = await reportRepositoryPromise;
+    const report = await repository.get(req.params.id);
+    if (!report) return res.status(404).json({ error: "Report not found" });
+    const session = getAuthSession(req);
+    if (report.userAddress && session?.address.toLowerCase() !== report.userAddress.toLowerCase()) {
+      return res.status(403).json({ error: "Only the report owner can attach an execution outcome" });
+    }
+    const chainId = report.safetyAttestation?.chainId ?? report.firewallEvaluation?.safetyEnvelope.chainId;
+    const outcome = await analyzeExecutionOutcome({ report, transactionHash, rpcUrl: executionRpcUrl(chainId) });
+    report.executionOutcome = outcome;
+    report.executionReceiptHash = hashReportPayload({ reportHash: report.reportHash, executionOutcome: outcome });
+    await repository.replace(report);
+    return res.json({ report, outcome });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (isZodError(err)) {
     return res.status(400).json({ error: err.issues[0]?.message ?? "Invalid request body" });
@@ -877,6 +929,12 @@ function getRegistryAddress(): `0x${string}` | undefined {
 
 function getRegistryRpcUrl(): string | undefined {
   return process.env.REPORT_REGISTRY_RPC_URL ?? process.env.BASE_SEPOLIA_RPC_URL ?? process.env.SEPOLIA_RPC_URL;
+}
+
+function executionRpcUrl(chainId?: number): string | undefined {
+  if (chainId === 84532) return process.env.BASE_SEPOLIA_RPC_URL ?? process.env.REPORT_REGISTRY_RPC_URL;
+  if (chainId === 11155111) return process.env.SEPOLIA_RPC_URL ?? process.env.REPORT_REGISTRY_RPC_URL;
+  return undefined;
 }
 
 function getRegistryChain(): Chain {

@@ -11,6 +11,8 @@ import {
   type RiskAnalysis,
   type RiskFactors,
   type RiskLevel,
+  type SafetyAttestation,
+  type ExecutionOutcome,
   type RouteAnalysis,
   type RouteDecision,
   type RouteOption,
@@ -29,6 +31,8 @@ export type AgentContext = {
   userAddress?: string;
   reportURI?: string;
   chainTxHash?: `0x${string}`;
+  safetyAttestation?: SafetyAttestation;
+  executionOutcome?: ExecutionOutcome;
   fixtures?: FixtureScenario[];
 };
 
@@ -158,6 +162,7 @@ export const ReportAgent: Agent<SentinelReport> = {
       marketEvidence: context.riskAnalysis.marketEvidence,
       evidenceReceipt: context.evidenceReceipt,
       firewallEvaluation: context.firewallEvaluation,
+      safetyAttestation: context.safetyAttestation,
       recommendedRoute: context.routeRecommendation,
       modelVersion: MODEL_VERSION,
       reportURI,
@@ -169,6 +174,7 @@ export const ReportAgent: Agent<SentinelReport> = {
       agentTrace: [],
       reportHash,
       chainTxHash: context.chainTxHash,
+      executionOutcome: context.executionOutcome,
       verificationStatus: context.chainTxHash ? "pending" : "local-only"
     };
 
@@ -754,6 +760,8 @@ export function recomputeReportHash(report: SentinelReport): `0x${string}` {
     reportHash: _reportHash,
     verificationStatus: _verificationStatus,
     chainTxHash: _chainTxHash,
+    executionOutcome: _executionOutcome,
+    executionReceiptHash: _executionReceiptHash,
     ...hashable
   } = report;
   return hashReportPayload(hashable);

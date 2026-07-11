@@ -8,9 +8,12 @@ import {
   type EvidenceReceipt,
   type FirewallDecision,
   type FirewallEvaluation,
+  type IntentCompliance,
   type PolicyViolation,
   type QuotePreview,
   type RiskAnalysis,
+  type SafetyDelta,
+  type SafetyEnvelope,
   type ScamPatternMatch,
   type TransactionPreview,
   type WalletHealthScore
@@ -22,13 +25,17 @@ export function evaluateFirewall({
   analysis,
   quote,
   decodedTransaction,
-  policy = DEFAULT_AGENT_WALLET_POLICY
+  policy = DEFAULT_AGENT_WALLET_POLICY,
+  userAddress,
+  userChainId
 }: {
   intent: DeFiIntent;
   analysis: RiskAnalysis;
   quote?: QuotePreview;
   decodedTransaction?: DecodedTransaction;
   policy?: AgentWalletPolicy;
+  userAddress?: `0x${string}`;
+  userChainId?: number;
 }): FirewallEvaluation {
   const normalizedPolicy = normalizePolicy(policy);
   const evidence = buildEvidenceReceipt(intent, analysis, quote, decodedTransaction);
@@ -37,6 +44,9 @@ export function evaluateFirewall({
   const decision = chooseDecision(analysis.riskScore, violations, normalizedPolicy);
   const guardrailState = buildGuardrailState(decision, scamPatterns, violations, analysis.riskScore);
   const walletHealth = scoreWalletHealth(analysis.riskScore, violations, scamPatterns);
+  const safetyEnvelope = buildSafetyEnvelope(intent, evidence, normalizedPolicy, quote, userAddress, userChainId);
+  const intentCompliance = evaluateIntentCompliance(intent, evidence, normalizedPolicy, decision, decodedTransaction, quote, safetyEnvelope);
+  const safetyDelta = buildSafetyDelta(intent, analysis, evidence, normalizedPolicy, quote);
   const transactionPreview: TransactionPreview = {
     decodedAction: decodedTransaction ? decodedTransactionAction(decodedTransaction, intent.tokenIn) : decodeAction(intent),
     chain: intent.chain ?? "ethereum",
@@ -58,9 +68,228 @@ export function evaluateFirewall({
     guardrailState,
     walletHealth,
     transactionPreview,
+    safetyEnvelope,
+    intentCompliance,
+    safetyDelta,
     summary: buildSummary(decision, analysis.riskScore, violations),
     evaluatedAt: new Date().toISOString()
   };
+}
+
+function buildSafetyEnvelope(
+  intent: DeFiIntent,
+  evidence: EvidenceReceipt,
+  policy: AgentWalletPolicy,
+  quote?: QuotePreview
+  , userAddress?: `0x${string}`, userChainId?: number
+): SafetyEnvelope {
+  const expiresAt = new Date(Date.now() + 15 * 60_000).toISOString();
+  const nonce = hashPayload({ intent, evidenceHash: evidence.evidenceHash, expiresAt });
+  const envelopeBase = {
+    version: "sentinelmesh-safety-envelope-v1" as const,
+    chainId: userChainId ?? quote?.chainId ?? chainIdFromName(intent.chain),
+    action: intent.action,
+    chain: intent.chain ?? chainNameFromId(quote?.chainId),
+    tokenIn: intent.tokenIn,
+    tokenOut: intent.tokenOut,
+    maxAmountIn: intent.amount,
+    minimumAmountOut: quote?.minimumBuyAmount,
+    maxSlippagePercent: Math.min(
+      parsePercent(intent.constraints.maxSlippage) ?? policy.maxSlippagePercent,
+      policy.maxSlippagePercent
+    ),
+    allowedProtocols: [...policy.allowedProtocols].sort((a, b) => a.localeCompare(b)),
+    allowedTargets: supportedRouterTargets(),
+    authorizedRecipient: userAddress,
+    approvalPolicy: (normalizeSymbol(intent.tokenIn) === "ETH" ? "none" : "exact-only") as SafetyEnvelope["approvalPolicy"],
+    nonce,
+    expiresAt
+  };
+
+  return { ...envelopeBase, envelopeHash: hashPayload(envelopeBase) };
+}
+
+function evaluateIntentCompliance(
+  intent: DeFiIntent,
+  evidence: EvidenceReceipt,
+  policy: AgentWalletPolicy,
+  decision: FirewallDecision,
+  decodedTransaction?: DecodedTransaction,
+  quote?: QuotePreview
+  , envelope?: SafetyEnvelope
+): IntentCompliance {
+  const slippage = evidence.slippageEstimatePercent ?? parsePercent(intent.constraints.maxSlippage);
+  const checks: IntentCompliance["checks"] = [
+    {
+      checkId: "supported-action",
+      label: "Supported action",
+      status: intent.action === "swap" || intent.action === "analyze" ? "pass" : "fail",
+      expected: "swap or analyze",
+      observed: intent.action,
+      detail: intent.action === "swap" || intent.action === "analyze" ? "The action is covered by the v0 safety model." : "The action is outside the executable v0 safety model."
+    },
+    {
+      checkId: "token-policy",
+      label: "Token allowlist",
+      status: [intent.tokenIn, intent.tokenOut]
+        .filter((token): token is string => Boolean(token))
+        .every((token) => policy.allowedTokens.map(normalizeSymbol).includes(normalizeSymbol(token))) ? "pass" : "fail",
+      expected: policy.allowedTokens.join(", "),
+      observed: [intent.tokenIn, intent.tokenOut].filter(Boolean).join(" → ") || "missing",
+      detail: "Both sides of the transaction must be covered by the active wallet policy."
+    },
+    {
+      checkId: "slippage-bound",
+      label: "Slippage bound",
+      status: slippage === undefined ? "warn" : slippage <= policy.maxSlippagePercent ? "pass" : "fail",
+      expected: `≤ ${formatPercent(policy.maxSlippagePercent)}`,
+      observed: slippage === undefined ? "not proven" : formatPercent(slippage),
+      detail: "The observed or requested slippage must remain inside the user's policy."
+    },
+    {
+      checkId: "approval-scope",
+      label: "Approval scope",
+      status: evidence.approvalType === "unlimited" ? "fail" : evidence.approvalType === "unknown" ? "warn" : "pass",
+      expected: normalizeSymbol(intent.tokenIn) === "ETH" ? "none" : "exact amount",
+      observed: evidence.approvalType,
+      detail: "Unlimited approvals are never compliant with the default SentinelMesh envelope."
+    },
+    {
+      checkId: "simulation-result",
+      label: "Simulation result",
+      status: evidence.simulationStatus === "success" ? "pass" : evidence.simulationStatus === "reverted" ? "fail" : "warn",
+      expected: "successful simulation",
+      observed: evidence.simulationStatus,
+      detail: "Fallback analysis stays available, but a live successful simulation provides stronger evidence."
+    },
+    {
+      checkId: "calldata-integrity",
+      label: "Calldata integrity",
+      status: !decodedTransaction ? "warn" : decodedTransaction.kind === "unknown" ? "fail" : "pass",
+      expected: "decoded allowlisted call",
+      observed: decodedTransaction?.functionName ?? "transaction not supplied",
+      detail: decodedTransaction ? "The supplied calldata was checked by the deterministic decoder." : "Supply raw transaction calldata to bind the certificate to the exact wallet request."
+    },
+    {
+      checkId: "route-evidence",
+      label: "Route evidence",
+      status: quote?.routeSources.length ? "pass" : "warn",
+      expected: "one or more route sources",
+      observed: quote?.routeSources.join(", ") || "fixture route",
+      detail: "The certificate records which liquidity sources supported the recommendation."
+    },
+    {
+      checkId: "minimum-output",
+      label: "Minimum output",
+      status: !decodedTransaction || !isSwapDecode(decodedTransaction) ? "warn" : decodedTransaction.minimumAmountOutRaw === "0" ? "fail" : "pass",
+      expected: "non-zero minimum output",
+      observed: decodedTransaction?.minimumAmountOutRaw ?? "not decoded",
+      detail: "A zero minimum output allows the swap to execute without price protection."
+    },
+    {
+      checkId: "transaction-expiry",
+      label: "Transaction expiry",
+      status: !decodedTransaction?.deadline ? "warn" : BigInt(decodedTransaction.deadline) * 1000n <= BigInt(Date.now()) ? "fail" : "pass",
+      expected: `before ${envelope?.expiresAt ?? "envelope expiry"}`,
+      observed: decodedTransaction?.deadline ? new Date(Number(decodedTransaction.deadline) * 1000).toISOString() : "not decoded",
+      detail: "Expired calldata cannot satisfy a fresh safety envelope."
+    },
+    {
+      checkId: "authorized-recipient",
+      label: "Authorized recipient",
+      status: !envelope?.authorizedRecipient || !decodedTransaction?.recipient ? "warn" : decodedTransaction.recipient.toLowerCase() === envelope.authorizedRecipient.toLowerCase() ? "pass" : "fail",
+      expected: envelope?.authorizedRecipient ?? "connected wallet",
+      observed: decodedTransaction?.recipient ?? "not decoded",
+      detail: "Swap output must be sent to the wallet that authorized the envelope."
+    },
+    {
+      checkId: "router-allowlist",
+      label: "Router allowlist",
+      status: !decodedTransaction || !isSwapDecode(decodedTransaction) || !decodedTransaction.contractAddress ? "warn" : envelope?.allowedTargets.some((target) => target.toLowerCase() === decodedTransaction.contractAddress?.toLowerCase()) ? "pass" : "fail",
+      expected: "approved router target",
+      observed: decodedTransaction?.contractAddress ?? "not decoded",
+      detail: "The wallet call target must be a router committed into the safety envelope."
+    }
+  ];
+  const failed = checks.filter((check) => check.status === "fail").length;
+  const warned = checks.filter((check) => check.status === "warn").length;
+  const status = decision === "BLOCK" || failed > 0 ? "BLOCKED" : warned > 0 || decision === "WARN" ? "REVIEW_REQUIRED" : "COMPLIANT";
+  const passedChecks = checks.filter((check) => check.status === "pass").length;
+
+  return {
+    status,
+    passedChecks,
+    totalChecks: checks.length,
+    checks,
+    summary:
+      status === "COMPLIANT"
+        ? `${passedChecks}/${checks.length} deterministic intent constraints passed.`
+        : status === "BLOCKED"
+          ? `${failed} intent constraint${failed === 1 ? "" : "s"} failed; signing should remain blocked.`
+          : `${warned} constraint${warned === 1 ? "" : "s"} need stronger transaction evidence before signing.`,
+    evaluatedAt: new Date().toISOString()
+  };
+}
+
+function buildSafetyDelta(
+  intent: DeFiIntent,
+  analysis: RiskAnalysis,
+  evidence: EvidenceReceipt,
+  policy: AgentWalletPolicy,
+  quote?: QuotePreview
+): SafetyDelta {
+  const originalSlippagePercent = evidence.slippageEstimatePercent;
+  const protectedSlippagePercent = Math.min(originalSlippagePercent ?? policy.maxSlippagePercent, policy.maxSlippagePercent);
+  const approvalImproved = evidence.approvalType === "unlimited" || evidence.approvalType === "unknown";
+  const slippageReduction = Math.max(0, (originalSlippagePercent ?? protectedSlippagePercent) - protectedSlippagePercent);
+  const riskReduction = Math.min(
+    analysis.riskScore,
+    Math.round(slippageReduction * 8 + (approvalImproved ? 18 : 0) + (analysis.riskScore > 70 ? 10 : analysis.riskScore > 40 ? 5 : 0))
+  );
+  const improvements: string[] = [];
+  if (slippageReduction > 0) improvements.push(`Caps slippage ${formatPercent(slippageReduction)} below the analyzed transaction.`);
+  if (approvalImproved) improvements.push("Replaces unproven or unlimited approval scope with exact-amount approval.");
+  if (analysis.riskScore > 40) improvements.push("Requires the lower-risk route and human review before signing.");
+  if (quote?.minimumBuyAmount) improvements.push("Binds the protected route to a recorded minimum output.");
+  if (improvements.length === 0) improvements.push("The analyzed transaction already fits the active safety policy.");
+
+  return {
+    originalRiskScore: analysis.riskScore,
+    protectedRiskScore: Math.max(0, analysis.riskScore - riskReduction),
+    riskReduction,
+    originalSlippagePercent,
+    protectedSlippagePercent,
+    originalApproval: evidence.approvalType,
+    protectedApproval: normalizeSymbol(intent.tokenIn) === "ETH" ? "none" : "exact",
+    originalMinimumAmountOut: quote?.minimumBuyAmount,
+    protectedMinimumAmountOut: quote?.minimumBuyAmount,
+    improvements,
+    dataSource: quote?.status === "live" ? (analysis.dataSource === "fixture" ? "mixed" : "live") : "fixture"
+  };
+}
+
+function chainNameFromId(chainId?: number) {
+  if (chainId === 8453) return "base";
+  if (chainId === 1) return "ethereum";
+  return "ethereum";
+}
+
+function chainIdFromName(chain?: string) {
+  const normalized = (chain ?? "ethereum").trim().toLowerCase();
+  if (normalized.includes("base")) return 8453;
+  if (normalized.includes("sepolia")) return 11155111;
+  return 1;
+}
+
+function supportedRouterTargets(): `0x${string}`[] {
+  return [
+    "0xDef1C0ded9bec7F1a1670819833240f027b25EfF",
+    "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"
+  ];
+}
+
+function isSwapDecode(decoded: DecodedTransaction) {
+  return decoded.kind === "uniswap-v2-swap" || decoded.kind === "uniswap-v3-swap";
 }
 
 function evaluatePolicyRules(

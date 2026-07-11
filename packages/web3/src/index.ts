@@ -1,5 +1,6 @@
 import { baseSepolia, sepolia } from "viem/chains";
 import type { Chain } from "viem";
+import type { SafetyEnvelope } from "@sentinelmesh/shared";
 
 export const sentinelReportRegistryAbi = [
   {
@@ -200,5 +201,28 @@ export function transactionStateCopy(snapshot: TransactionStateSnapshot): Transa
   return {
     ...defaults[snapshot.state],
     ...snapshot
+  };
+}
+
+export const safetyEnvelopeTypes = {
+  SafetyEnvelope: [
+    { name: "signer", type: "address" },
+    { name: "envelopeHash", type: "bytes32" },
+    { name: "nonce", type: "bytes32" },
+    { name: "expiresAt", type: "uint256" }
+  ]
+} as const;
+
+export function safetyEnvelopeTypedData(envelope: SafetyEnvelope, signer: `0x${string}`) {
+  return {
+    domain: { name: "SentinelMesh", version: "1", chainId: envelope.chainId },
+    types: safetyEnvelopeTypes,
+    primaryType: "SafetyEnvelope" as const,
+    message: {
+      signer,
+      envelopeHash: envelope.envelopeHash,
+      nonce: envelope.nonce,
+      expiresAt: BigInt(Math.floor(new Date(envelope.expiresAt).getTime() / 1000))
+    }
   };
 }

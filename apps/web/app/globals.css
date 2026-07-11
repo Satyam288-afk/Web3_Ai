@@ -150,3 +150,86 @@ textarea:focus-visible {
 .sentinel-dark-page .eyebrow {
   color: #a8ff8d;
 }
+
+.sentinel-horizontal-strip {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.1rem 0.75rem;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 237, 97, 0.42) rgba(255, 255, 255, 0.05);
+}
+
+.sentinel-horizontal-strip > * {
+  flex: 0 0 min(260px, 78vw);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.sentinel-route-strip > * {
+  flex-basis: min(520px, 86vw);
+}
+
+.sentinel-horizontal-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sentinel-horizontal-strip::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sentinel-horizontal-strip::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(50, 136, 75, 0.8), rgba(126, 237, 97, 0.85));
+}
+
+.sentinel-depth-card {
+  position: relative;
+  transform: perspective(1100px) rotateX(0.7deg) translateZ(0);
+  transform-origin: center top;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.09) inset,
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    0 0 44px rgba(126, 237, 97, 0.07);
+  transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
+}
+
+.sentinel-depth-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(126, 237, 97, 0.08), transparent 32%, transparent 72%, rgba(33, 214, 151, 0.05));
+}
+
+.sentinel-depth-card:hover {
+  transform: perspective(1100px) rotateX(0deg) translateY(-3px) translateZ(8px);
+  border-color: rgba(126, 237, 97, 0.27);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 32px 90px rgba(0, 0, 0, 0.42),
+    0 0 54px rgba(126, 237, 97, 0.11);
+}
+
+.agent-3d-stage {
+  background:
+    radial-gradient(circle at 78% 10%, rgba(126, 237, 97, 0.11), transparent 25rem),
+    radial-gradient(circle at 18% 38%, rgba(33, 214, 151, 0.08), transparent 30rem),
+    linear-gradient(180deg, #06100c 0%, #081611 100%);
+}
+
+.agent-3d-stage .surface {
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sentinel-depth-card,
+  .sentinel-depth-card:hover {
+    transform: none;
+    transition: none;
+  }
+}

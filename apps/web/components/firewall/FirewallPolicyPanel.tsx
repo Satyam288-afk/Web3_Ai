@@ -3,6 +3,7 @@
 import { AlertTriangle, CheckCircle2, LockKeyhole, ShieldAlert, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { DEFAULT_AGENT_WALLET_POLICY, type AgentWalletPolicy, type FirewallEvaluation, type RawTransactionInput } from "@sentinelmesh/shared";
 import { cn } from "@/lib/format";
+import { encodeFunctionData, parseAbi } from "viem";
 import { ExplainableFirewall, RecoveryActions } from "./FirewallGuidance";
 import { ProtocolTrustGraph } from "./ProtocolTrustGraph";
 
@@ -27,7 +28,7 @@ export function FirewallPolicyPanel({
 }) {
   const decision = evaluation?.decision;
   return (
-    <div className="surface rounded-lg p-5">
+    <div className="surface sentinel-depth-card rounded-[24px] p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="eyebrow flex items-center gap-2"><LockKeyhole size={14} /> Transaction firewall</div>
@@ -94,13 +95,19 @@ export function FirewallPolicyPanel({
             <div className="text-xs font-semibold text-ink">Raw transaction decoder</div>
             <p className="mt-1 text-xs leading-5 text-muted">Optional: paste calldata to detect approvals before wallet signing.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => onRawTransactionChange(sampleUnlimitedApproval())}
-            className="shrink-0 rounded border border-teal/30 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-teal"
-          >
-            Sample approval
-          </button>
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted">Attack lab</span>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[
+            ["Unlimited approval", sampleUnlimitedApproval],
+            ["Zero minimum", sampleZeroMinimumOutput],
+            ["Recipient swap", sampleRecipientSubstitution],
+            ["Unknown selector", sampleUnknownSelector]
+          ].map(([label, factory]) => (
+            <button key={String(label)} type="button" onClick={() => onRawTransactionChange((factory as () => RawTransactionInput)())} className="rounded border border-teal/30 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-teal">
+              {String(label)}
+            </button>
+          ))}
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <input
@@ -330,4 +337,36 @@ function sampleUnlimitedApproval(): RawTransactionInput {
     data:
       "0x095ea7b3000000000000000000000000000000000000000000000000000000000000deadffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
   };
+}
+
+const uniswapV2SampleAbi = parseAbi([
+  "function swapExactTokensForTokens(uint256 amountIn,uint256 amountOutMin,address[] path,address to,uint256 deadline) returns (uint256[] amounts)"
+]);
+const router = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45" as const;
+const usdc = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
+const weth = "0x4200000000000000000000000000000000000006" as const;
+
+function sampleSwap({ minimumOut, recipient }: { minimumOut: bigint; recipient: `0x${string}` }): RawTransactionInput {
+  return {
+    to: router,
+    tokenSymbol: "USDC",
+    chain: "base",
+    data: encodeFunctionData({
+      abi: uniswapV2SampleAbi,
+      functionName: "swapExactTokensForTokens",
+      args: [50_000_000n, minimumOut, [usdc, weth], recipient, BigInt(Math.floor(Date.now() / 1000) + 900)]
+    })
+  };
+}
+
+function sampleZeroMinimumOutput() {
+  return sampleSwap({ minimumOut: 0n, recipient: "0x1111111111111111111111111111111111111111" });
+}
+
+function sampleRecipientSubstitution() {
+  return sampleSwap({ minimumOut: 10_000_000_000_000_000n, recipient: "0x000000000000000000000000000000000000dEaD" });
+}
+
+function sampleUnknownSelector(): RawTransactionInput {
+  return { to: router, tokenSymbol: "USDC", chain: "base", data: "0xdeadbeef" };
 }

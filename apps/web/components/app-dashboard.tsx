@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAccount, useChainId, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, useChainId, usePublicClient, useSignTypedData, useWriteContract } from "wagmi";
 import {
   DEFAULT_AGENT_WALLET_POLICY,
   type AgentResult,
@@ -25,6 +25,7 @@ import {
   type RawTransactionInput,
   type RiskAnalysis,
   type RouteAnalysis,
+  type SafetyAttestation,
   type SentinelReport
 } from "@sentinelmesh/shared";
 import {
@@ -35,11 +36,13 @@ import {
   placeholderNetworks,
   placeholderReportRegistryAdapter,
   sentinelReportRegistryAbi,
+  safetyEnvelopeTypedData,
   type TransactionStateSnapshot
 } from "@sentinelmesh/web3";
 import { IntentCard } from "@/components/intent/IntentCard";
 import { IntentInput, intentExamples } from "@/components/intent/IntentInput";
 import { FirewallPolicyPanel } from "@/components/firewall/FirewallPolicyPanel";
+import { SafetyCertificate } from "@/components/firewall/SafetyCertificate";
 import { LazyAppControlPlane3D } from "@/components/hero/LazyAppControlPlane3D";
 import { OrchestrationPanel } from "@/components/orchestration/OrchestrationPanel";
 import { RiskFactorCard } from "@/components/risk/RiskFactorCard";
@@ -82,12 +85,19 @@ export function AppDashboard() {
   const [firewallLoading, setFirewallLoading] = useState(false);
   const [orchestrationLoading, setOrchestrationLoading] = useState(false);
   const [creatingReport, setCreatingReport] = useState(false);
+  const [signingEnvelope, setSigningEnvelope] = useState(false);
+  const [safetyAttestation, setSafetyAttestation] = useState<SafetyAttestation | null>(null);
   const [preferredNetworkId, setPreferredNetworkId] = useState("base-sepolia-placeholder");
   const { address, isConnected } = useAccount();
   const { status: authStatus, user: authUser } = useSentinelAuth();
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
+  const { signTypedDataAsync } = useSignTypedData();
+
+  useEffect(() => {
+    setSafetyAttestation(null);
+  }, [firewallEvaluation?.safetyEnvelope.envelopeHash]);
 
   useEffect(() => {
     const savedMode = window.localStorage.getItem("sentinelmesh.executionMode");
@@ -266,7 +276,9 @@ export function AppDashboard() {
         prompt,
         parsedIntent: intent,
         selectedRouteId,
-        policy
+        policy,
+        safetyEnvelope: safetyAttestation ? firewallEvaluation.safetyEnvelope : undefined,
+        safetyAttestation: safetyAttestation ?? undefined
       });
 
       if (canAnchor && selectedNetworkFromId.registryAddress) {
@@ -329,8 +341,10 @@ export function AppDashboard() {
     parsedIntent: DeFiIntent;
     selectedRouteId: string;
     policy: AgentWalletPolicy;
+    safetyEnvelope?: FirewallEvaluation["safetyEnvelope"];
+    safetyAttestation?: SafetyAttestation;
   }) {
-    const userAddress = mode === "Report On-chain" && authenticatedWallet ? address : undefined;
+    const userAddress = authenticatedWallet && (mode === "Report On-chain" || safetyAttestation) ? address : undefined;
     try {
       return await api.createReport({
         ...input,
@@ -345,29 +359,47 @@ export function AppDashboard() {
     }
   }
 
+  async function signSafetyEnvelope() {
+    if (!firewallEvaluation || !address || !authenticatedWallet) {
+      setError("Connect and authenticate the wallet before signing the safety envelope.");
+      return;
+    }
+    setSigningEnvelope(true);
+    setError(null);
+    try {
+      const envelope = firewallEvaluation.safetyEnvelope;
+      const signature = await signTypedDataAsync(safetyEnvelopeTypedData(envelope, address));
+      setSafetyAttestation({
+        signer: address,
+        chainId: envelope.chainId,
+        envelopeHash: envelope.envelopeHash,
+        signature,
+        signedAt: new Date().toISOString(),
+        verificationStatus: "verified"
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Safety envelope signing failed.");
+    } finally {
+      setSigningEnvelope(false);
+    }
+  }
+
   return (
     <main className="pb-8">
-      <section className="relative isolate overflow-hidden bg-[#213c1c] px-3 py-5 sm:px-5 sm:py-7">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.06)_1px,transparent_1px)] bg-[length:44px_44px]" />
-        <div className="relative mx-auto max-w-7xl rounded-[28px] border border-[#7eed61]/65 bg-black shadow-[0_0_22px_rgba(126,237,97,0.58),0_0_86px_rgba(126,237,97,0.28)]">
-          <div className="relative min-h-[430px] overflow-hidden rounded-[27px]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_45%,rgba(126,237,97,0.20),transparent_29%),linear-gradient(90deg,rgba(0,0,0,0.98)_0%,rgba(0,0,0,0.94)_45%,rgba(7,31,17,0.74)_100%)]" />
-            <div className="absolute inset-y-6 right-0 w-full max-w-4xl opacity-95">
+      <section className="relative isolate overflow-hidden border-b border-[#7eed61]/10 bg-[#06100d]">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.035)_1px,transparent_1px)] bg-[length:44px_44px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_42%,rgba(22,176,105,0.19),transparent_28%),radial-gradient(circle_at_22%_58%,rgba(126,237,97,0.07),transparent_36%)]" />
+        <div className="relative mx-auto max-w-[1500px]">
+          <div className="relative min-h-[650px] overflow-hidden">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,9,7,0.98)_0%,rgba(3,10,8,0.90)_42%,rgba(4,20,14,0.50)_100%)]" />
+            <div className="absolute inset-y-4 right-0 w-full max-w-5xl opacity-100 [filter:saturate(1.18)_contrast(1.08)]">
               <LazyAppControlPlane3D />
             </div>
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.88)_45%,rgba(0,0,0,0.34)_100%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.04)_1px,transparent_1px)] bg-[length:38px_38px]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,8,6,0.97)_0%,rgba(2,8,6,0.86)_42%,rgba(2,8,6,0.12)_76%,rgba(2,8,6,0.42)_100%)]" />
 
-            <div className="relative z-10 grid min-h-[430px] items-center gap-8 px-6 py-8 sm:px-9 lg:grid-cols-[0.82fr_1fr] lg:px-12">
+            <div className="relative z-10 grid min-h-[540px] items-center gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[0.82fr_1fr] lg:px-12 xl:px-16">
               <div className="max-w-3xl">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#7eed61]/40 bg-[#102a21] text-[#7eed61] shadow-[0_0_24px_rgba(126,237,97,0.22)]">
-                    <ShieldCheck size={22} />
-                  </span>
-                  <span className="text-2xl font-black tracking-wide text-white">SentinelMesh</span>
-                </div>
-
-                <div className="mt-10 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <span className="rounded-full border border-[#7eed61]/40 bg-[#7eed61]/10 px-3 py-1.5 text-xs font-bold text-[#a8ff8d]">
                     Live orchestration layer
                   </span>
@@ -379,8 +411,8 @@ export function AppDashboard() {
                   </span>
                 </div>
 
-                <h1 className="mt-7 max-w-4xl text-5xl font-black leading-[1.02] text-white [text-shadow:0_0_28px_rgba(126,237,97,0.16)] sm:text-6xl lg:text-7xl">
-                  AI transaction firewall for DeFi wallets and agents
+                <h1 className="mt-8 max-w-4xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white [text-shadow:0_0_28px_rgba(126,237,97,0.13)] sm:text-6xl xl:text-7xl">
+                  AI transaction<br />firewall for<br /><span className="bg-gradient-to-r from-[#7eed61] via-[#78f181] to-[#4fd6a0] bg-clip-text text-transparent">DeFi wallets</span><br />and agents
                 </h1>
                 <p className="mt-6 max-w-2xl text-base font-semibold leading-8 text-white/80 sm:text-lg">
                   Decode intent, map protocol trust, score risk, enforce signing policy, and save verifiable evidence before a wallet or AI agent signs.
@@ -398,20 +430,18 @@ export function AppDashboard() {
                     href="/reports"
                     className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white hover:border-[#7eed61]/55 hover:text-[#a8ff8d]"
                   >
-                    Reports
+                    View reports
                     <FileCheck2 size={17} />
                   </a>
                 </div>
-
-                <div className="mt-10 grid max-w-xl grid-cols-3 gap-3 border-t border-white/10 pt-6">
-                  <HeroMetric value={risk ? `${risk.riskScore}` : "7"} label={risk ? "Risk score" : "Risk signals"} />
-                  <HeroMetric value={firewallEvaluation?.decision ?? "READY"} label="Firewall" />
-                  <HeroMetric value={orchestrationRun?.status ?? "SIM"} label="Mode" />
+                <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-white/45">
+                  <ShieldCheck size={15} className="text-[#7eed61]" />
+                  Your keys stay yours. SentinelMesh never takes custody.
                 </div>
               </div>
 
               <div className="relative hidden min-h-[320px] lg:block" aria-hidden="true">
-                <div className="absolute bottom-5 right-5 w-80 rounded-xl border border-[#7eed61]/25 bg-black/60 p-4 text-white shadow-[0_0_46px_rgba(126,237,97,0.16)] backdrop-blur">
+                <div className="absolute bottom-10 right-5 w-80 rounded-2xl border border-[#7eed61]/20 bg-[#050a08]/82 p-5 text-white shadow-[0_28px_90px_rgba(0,0,0,0.5),0_0_46px_rgba(126,237,97,0.10)] backdrop-blur-xl">
                   <div className="flex items-center justify-between text-xs font-black text-[#a8ff8d]">
                     ORCHESTRATOR
                     <span>{firewallEvaluation?.decision ?? "WAITING"}</span>
@@ -430,6 +460,11 @@ export function AppDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+            <div className="relative z-10 mx-5 mb-6 grid overflow-hidden rounded-2xl border border-white/10 bg-[#07100d]/88 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-xl sm:mx-8 md:grid-cols-3 lg:mx-12 xl:mx-16">
+              <HeroStatus icon={<Activity size={22} />} value={risk ? `${risk.riskScore}` : "7"} label={risk ? "Risk score" : "Risk signals"} detail="Detected in real time" />
+              <HeroStatus icon={<ShieldCheck size={22} />} value={firewallEvaluation?.decision ?? "READY"} label="Firewall" detail="Policy engine active" />
+              <HeroStatus icon={<GitBranch size={22} />} value={orchestrationRun?.status ?? "SIM"} label="Mode" detail="Simulation enabled" accent="violet" />
             </div>
           </div>
         </div>
@@ -512,6 +547,7 @@ export function AppDashboard() {
           }}
           onEvaluate={() => evaluateFirewall()}
         />
+        <SafetyCertificate evaluation={firewallEvaluation} />
       </section>
 
       <aside className="space-y-5">
@@ -534,7 +570,7 @@ export function AppDashboard() {
               routeAnalysis &&
               selectedRouteId &&
               firewallEvaluation &&
-              (mode === "Simulation Only" || canAnchor)
+              (mode === "Simulation Only" || (canAnchor && safetyAttestation))
           )}
           onChainReady={canAnchor}
           creating={creatingReport}
@@ -542,6 +578,11 @@ export function AppDashboard() {
           txState={txState}
           onModeChange={changeMode}
           onCreate={generateReport}
+          safetyEnvelope={firewallEvaluation?.safetyEnvelope}
+          safetyAttestation={safetyAttestation}
+          signingEnvelope={signingEnvelope}
+          canSignEnvelope={Boolean(firewallEvaluation && authenticatedWallet && address)}
+          onSignEnvelope={signSafetyEnvelope}
         />
       </aside>
       </div>
@@ -569,11 +610,11 @@ function CryptoStat({ icon, label, value, tone }: { icon: React.ReactNode; label
   );
 }
 
-function HeroMetric({ value, label }: { value: string; label: string }) {
+function HeroStatus({ icon, value, label, detail, accent = "green" }: { icon: React.ReactNode; value: string; label: string; detail: string; accent?: "green" | "violet" }) {
   return (
-    <div>
-      <div className="truncate text-2xl font-black text-[#7eed61]">{value}</div>
-      <div className="mt-1 text-xs font-bold text-white/50">{label}</div>
+    <div className="flex items-center gap-4 border-b border-white/8 px-6 py-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
+      <span className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-full border", accent === "violet" ? "border-violet-400/20 bg-violet-400/8 text-violet-300" : "border-[#7eed61]/20 bg-[#7eed61]/8 text-[#7eed61]")}>{icon}</span>
+      <div><div className={cn("text-2xl font-black uppercase", accent === "violet" ? "text-violet-300" : "text-[#7eed61]")}>{value}</div><div className="mt-0.5 text-sm font-bold text-white/75">{label}</div><div className="mt-1 text-xs text-white/35">{detail}</div></div>
     </div>
   );
 }
@@ -597,7 +638,13 @@ function WorkflowProgress({
     { label: "Analyze", compactLabel: "Risk", complete: Boolean(risk) },
     { label: "Recommend", compactLabel: "Route", complete: Boolean(routeAnalysis) },
     { label: "Firewall", compactLabel: "Guard", complete: Boolean(firewallEvaluation) },
-    { label: "Save", compactLabel: "Save", complete: Boolean(report) }
+    {
+      label: "Verify",
+      compactLabel: "Verify",
+      complete: Boolean(report),
+      status: report?.verificationStatus === "verified" ? "Registry" : report ? "Local" : undefined
+    },
+    { label: "History", compactLabel: "Saved", complete: Boolean(report) }
   ];
 
   const completedCount = steps.filter((step) => step.complete).length;
@@ -607,7 +654,7 @@ function WorkflowProgress({
     <div className="relative py-4 text-white">
       <div className="absolute left-4 right-4 top-7 h-px bg-white/12" />
       <div className="absolute left-4 top-7 h-px bg-[#7eed61]/80 shadow-[0_0_18px_rgba(126,237,97,0.42)]" style={{ width: `calc((100% - 2rem) * ${progress / 100})` }} />
-      <div className="relative grid grid-cols-6">
+      <div className="relative grid grid-cols-7">
         {steps.map((step, index) => (
           <div key={step.label} className="flex flex-col items-center gap-2 px-1">
             <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold backdrop-blur", step.complete ? "border-[#7eed61] bg-[#7eed61] text-black shadow-[0_0_18px_rgba(126,237,97,0.28)]" : "border-white/15 bg-[#07130f] text-white/35")}>
@@ -616,6 +663,7 @@ function WorkflowProgress({
             <span className={cn("text-center text-[10px] font-bold sm:text-xs", step.complete ? "text-white/85" : "text-white/35")}>
               <span className="sm:hidden">{step.compactLabel}</span>
               <span className="hidden sm:inline">{step.label}</span>
+              {"status" in step && step.status && <span className="mt-0.5 block text-[9px] uppercase text-[#a8ff8d]/70">{step.status}</span>}
             </span>
           </div>
         ))}

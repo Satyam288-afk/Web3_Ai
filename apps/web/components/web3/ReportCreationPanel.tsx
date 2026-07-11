@@ -1,8 +1,8 @@
 "use client";
 
-import { BadgeCheck, Database, Save } from "lucide-react";
+import { BadgeCheck, Database, FileSignature, Loader2, Save } from "lucide-react";
 import Link from "next/link";
-import type { ExecutionMode, SentinelReport } from "@sentinelmesh/shared";
+import type { ExecutionMode, SafetyAttestation, SafetyEnvelope, SentinelReport } from "@sentinelmesh/shared";
 import type { TransactionStateSnapshot, Web3NetworkMetadata } from "@sentinelmesh/web3";
 import { cn, shortHash } from "@/lib/format";
 import { TransactionStatePanel } from "./TransactionStatePanel";
@@ -16,7 +16,12 @@ export function ReportCreationPanel({
   report,
   txState,
   onModeChange,
-  onCreate
+  onCreate,
+  safetyEnvelope,
+  safetyAttestation,
+  signingEnvelope,
+  canSignEnvelope,
+  onSignEnvelope
 }: {
   mode: ExecutionMode;
   selectedNetwork: Web3NetworkMetadata;
@@ -27,6 +32,11 @@ export function ReportCreationPanel({
   txState: TransactionStateSnapshot;
   onModeChange: (mode: ExecutionMode) => void;
   onCreate: () => void;
+  safetyEnvelope?: SafetyEnvelope;
+  safetyAttestation: SafetyAttestation | null;
+  signingEnvelope: boolean;
+  canSignEnvelope: boolean;
+  onSignEnvelope: () => void;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
@@ -62,9 +72,32 @@ export function ReportCreationPanel({
         {selectedNetwork.isPlaceholder && <span> placeholder metadata</span>}
       </div>
 
+      <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/55">
+        {mode === "Simulation Only"
+          ? "Simulation mode saves a local report and recomputes its deterministic hash. It does not ask the wallet to sign."
+          : "On-chain mode still creates the report locally first, then asks the wallet to anchor only the hash in the testnet registry."}
+      </div>
+
       {mode === "Report On-chain" && !onChainReady && (
         <div className="mt-3 rounded-xl border border-amber-300/25 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
           Connect and authenticate a wallet, switch to {selectedNetwork.label}, and configure the deployed registry before anchoring.
+        </div>
+      )}
+
+      {safetyEnvelope && (
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold text-white">EIP-712 safety envelope</div>
+              <div className="mt-1 font-mono text-[10px] text-white/40">{shortHash(safetyEnvelope.envelopeHash)} · expires {new Date(safetyEnvelope.expiresAt).toLocaleTimeString()}</div>
+            </div>
+            {safetyAttestation && <BadgeCheck size={18} className="text-[#7eed61]" />}
+          </div>
+          <button type="button" onClick={onSignEnvelope} disabled={!canSignEnvelope || signingEnvelope || Boolean(safetyAttestation)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#7eed61]/25 bg-[#7eed61]/10 px-3 py-2 text-xs font-bold text-[#a8ff8d] disabled:opacity-45">
+            {signingEnvelope ? <Loader2 className="animate-spin" size={14} /> : safetyAttestation ? <BadgeCheck size={14} /> : <FileSignature size={14} />}
+            {safetyAttestation ? "Envelope signed" : signingEnvelope ? "Waiting for wallet..." : "Sign safety envelope"}
+          </button>
+          {!canSignEnvelope && <p className="mt-2 text-[10px] leading-4 text-white/35">Connect and authenticate a wallet to create cryptographic proof. Unsigned simulation reports remain available.</p>}
         </div>
       )}
 

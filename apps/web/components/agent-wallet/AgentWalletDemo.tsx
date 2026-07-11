@@ -156,10 +156,10 @@ export function AgentWalletDemo() {
   }
 
   return (
-    <main className="sentinel-dark-page px-4 py-8 sm:px-6 lg:px-8">
+    <main className="sentinel-dark-page agent-3d-stage overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
       <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="surface rounded-lg p-6">
+        <div className="surface sentinel-depth-card rounded-[24px] p-6">
           <div className="eyebrow flex items-center gap-2"><Bot size={14} /> Agent wallet guardrails</div>
           <h1 className="mt-3 text-3xl font-semibold text-ink">AI agent kill switch</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">

@@ -11,7 +11,7 @@ export function RouteSelection({
   onSelect: (routeId: string) => void;
 }) {
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
+    <div className="sentinel-horizontal-strip sentinel-route-strip">
       {routeAnalysis.routes.map((route) => (
         <RouteCard key={route.routeId} route={route} selected={selectedRouteId === route.routeId} onSelect={onSelect} />
       ))}

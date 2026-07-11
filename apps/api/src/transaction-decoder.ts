@@ -6,6 +6,14 @@ const erc20Abi = parseAbi([
   "function transfer(address to,uint256 amount)",
   "function transferFrom(address from,address to,uint256 amount)"
 ]);
+const uniswapV2Abi = parseAbi([
+  "function swapExactTokensForTokens(uint256 amountIn,uint256 amountOutMin,address[] path,address to,uint256 deadline) returns (uint256[] amounts)",
+  "function swapExactETHForTokens(uint256 amountOutMin,address[] path,address to,uint256 deadline) payable returns (uint256[] amounts)",
+  "function swapExactTokensForETH(uint256 amountIn,uint256 amountOutMin,address[] path,address to,uint256 deadline) returns (uint256[] amounts)"
+]);
+const uniswapV3Abi = parseAbi([
+  "function exactInputSingle((address tokenIn,address tokenOut,uint24 fee,address recipient,uint256 deadline,uint256 amountIn,uint256 amountOutMinimum,uint160 sqrtPriceLimitX96) params) payable returns (uint256 amountOut)"
+]);
 
 const UINT256_MAX = (1n << 256n) - 1n;
 
@@ -76,12 +84,37 @@ export function decodeRawTransaction(transaction: RawTransactionInput): DecodedT
       riskNotes: ["transferFrom spends from another owner allowance; verify caller authorization and allowance scope."]
     };
   } catch {
+    // Continue through supported router decoders.
+  }
+
+  try {
+    const decoded = decodeFunctionData({ abi: uniswapV2Abi, data: transaction.data as Hex });
+    if (decoded.functionName === "swapExactTokensForTokens" || decoded.functionName === "swapExactTokensForETH") {
+      const [amountIn, amountOutMin, path, recipient, deadline] = decoded.args;
+      return { ...base, kind: "uniswap-v2-swap", functionName: decoded.functionName, recipient, amountRaw: amountIn.toString(), minimumAmountOutRaw: amountOutMin.toString(), tokenPath: [...path], deadline: deadline.toString(), riskNotes: routerNotes(amountOutMin, deadline) };
+    }
+    const [amountOutMin, path, recipient, deadline] = decoded.args;
+    return { ...base, kind: "uniswap-v2-swap", functionName: decoded.functionName, recipient, amountRaw: transaction.valueWei, minimumAmountOutRaw: amountOutMin.toString(), tokenPath: [...path], deadline: deadline.toString(), riskNotes: routerNotes(amountOutMin, deadline) };
+  } catch {
+    // Continue to Uniswap v3.
+  }
+
+  try {
+    const decoded = decodeFunctionData({ abi: uniswapV3Abi, data: transaction.data as Hex });
+    const [params] = decoded.args;
     return {
       ...base,
-      kind: "unknown",
-      functionName: "unknown",
-      riskNotes: ["Calldata did not match the v0 ERC-20 decoder allowlist."]
+      kind: "uniswap-v3-swap",
+      functionName: "exactInputSingle",
+      recipient: params.recipient,
+      amountRaw: params.amountIn.toString(),
+      minimumAmountOutRaw: params.amountOutMinimum.toString(),
+      tokenPath: [params.tokenIn, params.tokenOut],
+      deadline: params.deadline.toString(),
+      riskNotes: routerNotes(params.amountOutMinimum, params.deadline)
     };
+  } catch {
+    return { ...base, kind: "unknown", functionName: "unknown", riskNotes: ["Calldata did not match the supported ERC-20, Uniswap v2, or Uniswap v3 decoder allowlist."] };
   }
 }
 
@@ -95,5 +128,15 @@ export function decodedAction(decoded: DecodedTransaction, tokenSymbol?: string)
   if (decoded.kind === "erc20-transfer-from") {
     return `Transfer ${tokenSymbol ?? "token"} from ${decoded.owner ?? "owner"} to ${decoded.recipient ?? "recipient"}`;
   }
+  if (decoded.kind === "uniswap-v2-swap" || decoded.kind === "uniswap-v3-swap") {
+    return `Swap through ${decoded.functionName} with minimum output ${decoded.minimumAmountOutRaw ?? "unknown"} to ${decoded.recipient ?? "unknown recipient"}`;
+  }
   return "Unknown contract call";
+}
+
+function routerNotes(minimumAmountOut: bigint, deadline: bigint) {
+  return [
+    minimumAmountOut === 0n ? "Minimum output is zero, allowing unrestricted execution loss." : "A non-zero minimum output is encoded in calldata.",
+    deadline * 1000n <= BigInt(Date.now()) ? "Swap deadline has expired." : "Swap deadline is still valid at decode time."
+  ];
 }

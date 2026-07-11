@@ -10,7 +10,10 @@ import type {
   RiskAnalysis,
   RouteAnalysis,
   RouteOption,
-  SentinelReport
+  SentinelReport,
+  SafetyAttestation,
+  SafetyEnvelope,
+  ExecutionOutcome
 } from "@sentinelmesh/shared";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/backend";
@@ -149,6 +152,8 @@ export const api = {
     selectedRouteId: string;
     userAddress?: string;
     policy?: AgentWalletPolicy;
+    safetyEnvelope?: SafetyEnvelope;
+    safetyAttestation?: SafetyAttestation;
   }) {
     return request<SentinelReport>("/reports", {
       method: "POST",
@@ -165,6 +170,12 @@ export const api = {
     return request<{ report: SentinelReport; output: { verified: boolean }; verificationSource: string; registryReadError?: string; transactionVerified: boolean }>(`/reports/${id}/verify`, {
       method: "POST",
       body: JSON.stringify(body ?? {})
+    });
+  },
+  analyzeExecutionOutcome(id: string, transactionHash: string) {
+    return request<{ report: SentinelReport; outcome: ExecutionOutcome }>(`/reports/${id}/outcome`, {
+      method: "POST",
+      body: JSON.stringify({ transactionHash })
     });
   }
 };

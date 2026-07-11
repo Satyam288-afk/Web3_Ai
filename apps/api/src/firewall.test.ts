@@ -37,6 +37,11 @@ test("firewall allows a low-risk swap that satisfies policy", () => {
   assert.equal(result.guardrailState.killSwitchTriggered, false);
   assert.equal(result.walletHealth.level, "Healthy");
   assert.match(result.transactionPreview.evidence.evidenceHash, /^0x[a-f0-9]{64}$/);
+  assert.match(result.safetyEnvelope.envelopeHash, /^0x[a-f0-9]{64}$/);
+  assert.equal(result.safetyEnvelope.approvalPolicy, "none");
+  assert.equal(result.intentCompliance.status, "REVIEW_REQUIRED");
+  assert.ok(result.intentCompliance.checks.some((check) => check.checkId === "calldata-integrity" && check.status === "warn"));
+  assert.equal(result.safetyDelta.originalRiskScore, analysis.riskScore);
 });
 
 test("firewall blocks bridges and high-risk actions under default policy", () => {
@@ -78,4 +83,29 @@ test("firewall blocks raw unlimited ERC-20 approval calldata", () => {
   assert.equal(result.decision, "BLOCK");
   assert.equal(result.guardrailState.killSwitchTriggered, true);
   assert.ok(result.scamPatterns.some((pattern) => pattern.patternId === "approval-drain"));
+  assert.equal(result.intentCompliance.status, "BLOCKED");
+  assert.ok(result.intentCompliance.checks.some((check) => check.checkId === "approval-scope" && check.status === "fail"));
+  assert.ok(result.safetyDelta.riskReduction > 0);
+  assert.ok(result.safetyDelta.riskReduction <= result.safetyDelta.originalRiskScore);
+});
+
+test("compliance certificate passes decoded finite approval while preserving review for missing simulation", () => {
+  const erc20Swap: DeFiIntent = { ...safeSwap, tokenIn: "USDC", tokenOut: "WETH", amount: "50" };
+  const decodedTransaction = decodeRawTransaction({
+    to: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    tokenSymbol: "USDC",
+    data:
+      "0x095ea7b300000000000000000000000000000000000000000000000000000000000dead0000000000000000000000000000000000000000000000000000000002faf080"
+  });
+  const result = evaluateFirewall({
+    intent: erc20Swap,
+    analysis: analyzeRisk(erc20Swap),
+    decodedTransaction,
+    policy: DEFAULT_AGENT_WALLET_POLICY
+  });
+
+  assert.equal(result.intentCompliance.status, "REVIEW_REQUIRED");
+  assert.ok(result.intentCompliance.checks.some((check) => check.checkId === "approval-scope" && check.status === "pass"));
+  assert.ok(result.intentCompliance.checks.some((check) => check.checkId === "calldata-integrity" && check.status === "pass"));
+  assert.equal(result.safetyEnvelope.approvalPolicy, "exact-only");
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BadgeCheck, CheckCircle2, Check, Copy, Download, ExternalLink, FileCheck2, Loader2, Share2, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BadgeCheck, CheckCircle2, Check, Copy, Download, ExternalLink, FileCheck2, Fingerprint, Loader2, Share2, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 import type { SentinelReport } from "@sentinelmesh/shared";
@@ -8,6 +8,7 @@ import { findNetworkByChainId, getDefaultNetwork, getExplorerTxUrl, hydrateNetwo
 import { api } from "@/lib/api";
 import { cn, riskColor, shortHash } from "@/lib/format";
 import { MarketEvidence } from "@/components/risk/MarketEvidence";
+import { SafetyCertificate } from "@/components/firewall/SafetyCertificate";
 
 export function ReportDetail({ id }: { id: string }) {
   const [report, setReport] = useState<SentinelReport | null>(null);
@@ -16,6 +17,8 @@ export function ReportDetail({ id }: { id: string }) {
   const [shared, setShared] = useState(false);
   const [hashCopied, setHashCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [executionHash, setExecutionHash] = useState("");
+  const [analyzingOutcome, setAnalyzingOutcome] = useState(false);
   const publicClient = usePublicClient();
   const registryAddress = process.env.NEXT_PUBLIC_REPORT_REGISTRY_ADDRESS as `0x${string}` | undefined;
   const registryChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? 84532);
@@ -78,6 +81,23 @@ export function ReportDetail({ id }: { id: string }) {
     await navigator.clipboard.writeText(report.reportHash);
     setHashCopied(true);
     window.setTimeout(() => setHashCopied(false), 1600);
+  }
+
+  async function analyzeOutcome() {
+    if (!report || !/^0x[a-fA-F0-9]{64}$/.test(executionHash)) {
+      setError("Enter a valid testnet execution transaction hash.");
+      return;
+    }
+    setAnalyzingOutcome(true);
+    setError(null);
+    try {
+      const result = await api.analyzeExecutionOutcome(report.id, executionHash);
+      setReport(result.report);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Execution outcome analysis failed.");
+    } finally {
+      setAnalyzingOutcome(false);
+    }
   }
 
   if (loading) {
@@ -266,6 +286,39 @@ export function ReportDetail({ id }: { id: string }) {
         </section>
       )}
 
+      {report.firewallEvaluation && <SafetyCertificate evaluation={report.firewallEvaluation} />}
+
+      <section className="surface rounded-lg p-5">
+        <div className="eyebrow flex items-center gap-2 text-violet"><Fingerprint size={14} /> Execution flight recorder</div>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-ink">Post-execution outcome</h2>
+            <p className="mt-2 max-w-2xl text-xs leading-5 text-muted">Attach the actual testnet transaction to compare confirmed calldata and receipt evidence with the pre-sign certificate.</p>
+          </div>
+          {report.executionOutcome && <span className={cn("rounded-md border px-2 py-1 text-xs font-bold", outcomeTone(report.executionOutcome.status))}>{report.executionOutcome.status.replaceAll("_", " ")}</span>}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <input value={executionHash} onChange={(event) => setExecutionHash(event.target.value.trim())} placeholder="0x execution transaction hash" className="min-w-0 flex-1 rounded-md border border-border bg-panel2 px-3 py-2.5 font-mono text-xs text-ink" />
+          <button type="button" onClick={analyzeOutcome} disabled={analyzingOutcome} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{analyzingOutcome && <Loader2 className="animate-spin" size={14} />} Analyze</button>
+        </div>
+        {report.safetyAttestation && (
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <HashRow label="Signed by" value={shortHash(report.safetyAttestation.signer)} />
+            <HashRow label="Envelope" value={shortHash(report.safetyAttestation.envelopeHash)} />
+            <HashRow label="Signature" value={shortHash(report.safetyAttestation.signature)} />
+          </div>
+        )}
+        {report.executionOutcome && (
+          <div className="mt-4">
+            <p className="text-sm font-semibold text-ink">{report.executionOutcome.summary}</p>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {report.executionOutcome.driftChecks.map((check) => <div key={check.checkId} className="rounded-md border border-border bg-panel2 p-3"><div className="flex items-center justify-between gap-2 text-xs font-semibold text-ink"><span>{check.label}</span><span className={check.status === "pass" ? "text-success" : check.status === "fail" ? "text-danger" : "text-warning"}>{check.status.toUpperCase()}</span></div><p className="mt-1 text-xs leading-5 text-muted">{check.detail}</p></div>)}
+            </div>
+            {report.executionReceiptHash && <div className="mt-3"><HashRow label="Final receipt hash" value={shortHash(report.executionReceiptHash)} /></div>}
+          </div>
+        )}
+      </section>
+
       <section className="surface rounded-lg p-5">
         <div className="eyebrow">Assessment</div>
         <h2 className="mt-1 font-semibold text-ink">Risk factors</h2>
@@ -328,7 +381,7 @@ function verificationCopy(report: SentinelReport) {
   if (report.verificationStatus === "verified") {
     return {
       label: "Verified on-chain",
-      description: "The local report hash matches the hash read from the registry.",
+      description: "The canonical local report hash matches the hash read from SentinelReportRegistry for this wallet.",
       className: "border-success/20 bg-emerald-50 text-success",
       icon: BadgeCheck
     };
@@ -344,14 +397,14 @@ function verificationCopy(report: SentinelReport) {
   if (report.verificationStatus === "pending") {
     return {
       label: "Verification pending",
-      description: "The report has transaction metadata but still needs registry verification.",
+      description: "The report has transaction metadata but still needs a registry read to compare local hash against on-chain hash.",
       className: "border-warning/20 bg-amber-50 text-amber-900",
       icon: FileCheck2
     };
   }
   return {
-    label: "Local-only report",
-    description: "This deterministic report has not been anchored to the registry.",
+    label: "Local hash verified",
+    description: "This report has a deterministic canonical hash and is stored in local/API history. It has not been anchored to the testnet registry.",
     className: "border-border bg-panel2 text-muted",
     icon: FileCheck2
   };
@@ -361,6 +414,12 @@ function firewallTone(decision: "ALLOW" | "WARN" | "BLOCK") {
   if (decision === "ALLOW") return "border-success/20 bg-emerald-50 text-success";
   if (decision === "WARN") return "border-warning/20 bg-amber-50 text-amber-900";
   return "border-danger/20 bg-red-50 text-danger";
+}
+
+function outcomeTone(status: NonNullable<SentinelReport["executionOutcome"]>["status"]) {
+  if (status === "VERIFIED_COMPLIANT") return "border-success/20 bg-emerald-50 text-success";
+  if (status === "EXECUTION_DRIFT") return "border-danger/20 bg-red-50 text-danger";
+  return "border-warning/20 bg-amber-50 text-warning";
 }
 
 function formatDays(value?: number) {

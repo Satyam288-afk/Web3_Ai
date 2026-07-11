@@ -369,6 +369,113 @@ export type TransactionPreview = {
   decodedTransaction?: DecodedTransaction;
 };
 
+export type SafetyEnvelope = {
+  version: "sentinelmesh-safety-envelope-v1";
+  chainId: number;
+  action: DeFiAction;
+  chain: string;
+  tokenIn?: string;
+  tokenOut?: string;
+  maxAmountIn?: string;
+  minimumAmountOut?: string;
+  maxSlippagePercent: number;
+  allowedProtocols: string[];
+  allowedTargets: `0x${string}`[];
+  authorizedRecipient?: `0x${string}`;
+  approvalPolicy: "none" | "exact-only";
+  nonce: `0x${string}`;
+  expiresAt: string;
+  envelopeHash: `0x${string}`;
+};
+
+const AddressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/).transform((value) => value as `0x${string}`);
+const HashSchema = z.string().regex(/^0x[a-fA-F0-9]{64}$/).transform((value) => value as `0x${string}`);
+const HexSignatureSchema = z.string().regex(/^0x[a-fA-F0-9]+$/).transform((value) => value as `0x${string}`);
+
+export type SafetyAttestation = {
+  signer: `0x${string}`;
+  chainId: number;
+  envelopeHash: `0x${string}`;
+  signature: `0x${string}`;
+  signedAt: string;
+  verificationStatus: "verified";
+};
+
+export const SafetyEnvelopeSchema = z
+  .object({
+    version: z.literal("sentinelmesh-safety-envelope-v1"),
+    chainId: z.number().int().positive(),
+    action: z.enum(["swap", "bridge", "stake", "analyze", "unsupported"]),
+    chain: z.string().min(1),
+    tokenIn: z.string().optional(),
+    tokenOut: z.string().optional(),
+    maxAmountIn: z.string().optional(),
+    minimumAmountOut: z.string().optional(),
+    maxSlippagePercent: z.number().min(0).max(100),
+    allowedProtocols: z.array(z.string().min(1)).max(30),
+    allowedTargets: z.array(AddressSchema).max(30),
+    authorizedRecipient: AddressSchema.optional(),
+    approvalPolicy: z.enum(["none", "exact-only"]),
+    nonce: HashSchema,
+    expiresAt: z.string().datetime(),
+    envelopeHash: HashSchema
+  })
+  .strict();
+
+export type ComplianceCheckStatus = "pass" | "warn" | "fail";
+
+export type ComplianceCheck = {
+  checkId: string;
+  label: string;
+  status: ComplianceCheckStatus;
+  expected: string;
+  observed: string;
+  detail: string;
+};
+
+export type IntentCompliance = {
+  status: "COMPLIANT" | "REVIEW_REQUIRED" | "BLOCKED";
+  passedChecks: number;
+  totalChecks: number;
+  checks: ComplianceCheck[];
+  summary: string;
+  evaluatedAt: string;
+};
+
+export type SafetyDelta = {
+  originalRiskScore: number;
+  protectedRiskScore: number;
+  riskReduction: number;
+  originalSlippagePercent?: number;
+  protectedSlippagePercent: number;
+  originalApproval: EvidenceReceipt["approvalType"];
+  protectedApproval: "none" | "exact";
+  originalMinimumAmountOut?: string;
+  protectedMinimumAmountOut?: string;
+  improvements: string[];
+  dataSource: "live" | "fixture" | "mixed";
+};
+
+export type ExecutionOutcome = {
+  status: "NOT_EXECUTED" | "VERIFIED_COMPLIANT" | "EXECUTION_DRIFT" | "UNAVAILABLE";
+  transactionHash?: `0x${string}`;
+  chainId?: number;
+  blockNumber?: string;
+  transactionStatus?: "success" | "reverted";
+  actualGasUsed?: string;
+  effectiveGasPriceWei?: string;
+  actualRecipient?: `0x${string}`;
+  actualTarget?: `0x${string}`;
+  actualApproval?: "none" | "exact" | "unlimited" | "unknown";
+  actualAmountOutRaw?: string;
+  minimumAmountOutRaw?: string;
+  outputMeetsMinimum?: boolean;
+  driftChecks: ComplianceCheck[];
+  summary: string;
+  analyzedAt: string;
+  source: "rpc" | "local";
+};
+
 export type FirewallEvaluation = {
   decision: FirewallDecision;
   policy: AgentWalletPolicy;
@@ -377,6 +484,9 @@ export type FirewallEvaluation = {
   guardrailState: AgentGuardrailState;
   walletHealth: WalletHealthScore;
   transactionPreview: TransactionPreview;
+  safetyEnvelope: SafetyEnvelope;
+  intentCompliance: IntentCompliance;
+  safetyDelta: SafetyDelta;
   summary: string;
   evaluatedAt: string;
 };
@@ -390,13 +500,16 @@ export type RawTransactionInput = {
 };
 
 export type DecodedTransaction = {
-  kind: "erc20-approve" | "erc20-transfer" | "erc20-transfer-from" | "unknown";
+  kind: "erc20-approve" | "erc20-transfer" | "erc20-transfer-from" | "uniswap-v2-swap" | "uniswap-v3-swap" | "unknown";
   functionName: string;
   contractAddress?: `0x${string}`;
   spender?: `0x${string}`;
   recipient?: `0x${string}`;
   owner?: `0x${string}`;
   amountRaw?: string;
+  minimumAmountOutRaw?: string;
+  tokenPath?: `0x${string}`[];
+  deadline?: string;
   isUnlimitedApproval: boolean;
   riskNotes: string[];
 };
@@ -528,7 +641,19 @@ export const ReportCreateRequestSchema = z
     parsedIntent: DeFiIntentSchema,
     selectedRouteId: z.string().trim().min(1).max(120),
     userAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid wallet address").optional(),
-    policy: AgentWalletPolicySchema.optional()
+    policy: AgentWalletPolicySchema.optional(),
+    safetyEnvelope: SafetyEnvelopeSchema.optional(),
+    safetyAttestation: z
+      .object({
+        signer: AddressSchema,
+        chainId: z.number().int().positive(),
+        envelopeHash: HashSchema,
+        signature: HexSignatureSchema,
+        signedAt: z.string().datetime(),
+        verificationStatus: z.literal("verified")
+      })
+      .strict()
+      .optional()
   })
   .strict();
 
@@ -546,6 +671,9 @@ export type SentinelReport = {
   marketEvidence?: MarketEvidence;
   evidenceReceipt?: EvidenceReceipt;
   firewallEvaluation?: FirewallEvaluation;
+  safetyAttestation?: SafetyAttestation;
+  executionOutcome?: ExecutionOutcome;
+  executionReceiptHash?: `0x${string}`;
   recommendedRoute: RouteRecommendation;
   agentTrace: AgentResult[];
   modelVersion: string;
