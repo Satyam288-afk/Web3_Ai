@@ -30,23 +30,25 @@ Recommended host settings:
 - Start command: `npm run start -w @sentinelmesh/api`
 - Health check: `/health`
 
-Required backend env:
+Required backend env when running without blockchain deployment:
 
 ```bash
 PORT=4000
-REPORTS_DB_PATH=data/reports.json
+NODE_ENV=production
+DATABASE_URL=postgresql://...
+DATABASE_SSL=require
+SESSION_SECRET=at-least-32-random-characters
+ALLOWED_ORIGINS=https://your-frontend.example.com
+AUTH_ALLOWED_DOMAINS=your-frontend.example.com
 GROQ_API_KEY=...
 GROQ_MODEL=llama-3.1-8b-instant
-REPORT_REGISTRY_ADDRESS=0x...
-REPORT_REGISTRY_CHAIN_ID=84532
-REPORT_REGISTRY_RPC_URL=https://...
 ALLOW_CLIENT_SUPPLIED_ONCHAIN_HASH=false
 ```
 
 Notes:
 
 - `GROQ_API_KEY` is optional. Without it, deterministic parser/risk fallback still works.
-- `REPORT_REGISTRY_ADDRESS` and `REPORT_REGISTRY_RPC_URL` are required for backend on-chain verification.
+- Registry configuration is optional. Without it, reports remain locally hash-verified and every other production feature continues working.
 - Keep `ALLOW_CLIENT_SUPPLIED_ONCHAIN_HASH=false` for production demos.
 - `SESSION_SECRET` is mandatory in production and invalidates active sessions when rotated.
 - Set `DATABASE_URL` for hosted deployments. Without it, use a persistent disk and one API instance.
@@ -64,20 +66,20 @@ Recommended Vercel settings:
 - Build command: `npm run build -w @sentinelmesh/web`
 - Output directory: Next.js default
 
-Required frontend env:
+Required frontend env without a registry deployment:
 
 ```bash
 NEXT_PUBLIC_API_URL=https://your-api.example.com
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
-NEXT_PUBLIC_REPORT_REGISTRY_ADDRESS=0x...
-NEXT_PUBLIC_CHAIN_ID=84532
-NEXT_PUBLIC_EXPLORER_TX_URL_TEMPLATE=https://sepolia.basescan.org/tx/{txHash}
-NEXT_PUBLIC_EXPLORER_LABEL=BaseScan
 ```
 
 `NEXT_PUBLIC_API_URL` must point to the deployed API URL. Local development falls back to `http://localhost:4000`, but production should never rely on localhost.
 
 `NEXT_PUBLIC_REPORT_REGISTRY_ADDRESS` can remain blank until Satyam deploys `SentinelReportRegistry`. Missing contract metadata should show local-only/not-configured UI and must not break the app.
+
+Production report creation uses an `Idempotency-Key`. The web client sends this automatically. API integrations must send a unique 8-128 character key and safely retry the same key after network failures.
+
+SIWE nonces are stored in Postgres in production and consumed atomically. This prevents replay across multiple API instances.
 
 ## 4. Contract Metadata
 

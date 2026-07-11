@@ -157,6 +157,7 @@ export const api = {
   }) {
     return request<SentinelReport>("/reports", {
       method: "POST",
+      headers: { "Idempotency-Key": crypto.randomUUID() },
       body: JSON.stringify(input)
     });
   },

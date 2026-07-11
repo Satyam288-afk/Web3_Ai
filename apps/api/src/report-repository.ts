@@ -6,12 +6,14 @@ import type { SentinelReport } from "@sentinelmesh/shared";
 export interface ReportRepository {
   list(): Promise<SentinelReport[]>;
   get(id: string): Promise<SentinelReport | undefined>;
-  insert(report: SentinelReport): Promise<void>;
+  getByIdempotencyKey(key: string): Promise<SentinelReport | undefined>;
+  insert(report: SentinelReport, idempotencyKey?: string): Promise<void>;
   replace(report: SentinelReport): Promise<boolean>;
 }
 
 export class JsonReportRepository implements ReportRepository {
   private writeQueue: Promise<void> = Promise.resolve();
+  private readonly idempotency = new Map<string, string>();
 
   constructor(private readonly filePath: string) {}
 
@@ -24,11 +26,17 @@ export class JsonReportRepository implements ReportRepository {
     return (await this.list()).find((report) => report.id === id);
   }
 
-  async insert(report: SentinelReport) {
+  async getByIdempotencyKey(key: string) {
+    const id = this.idempotency.get(key);
+    return id ? this.get(id) : undefined;
+  }
+
+  async insert(report: SentinelReport, idempotencyKey?: string) {
     await this.enqueue(async () => {
       const reports = await this.read();
       reports.unshift(report);
       await this.write(reports);
+      if (idempotencyKey) this.idempotency.set(idempotencyKey, report.id);
     });
   }
 
@@ -101,11 +109,19 @@ export class PostgresReportRepository implements ReportRepository {
     return result.rows[0]?.payload;
   }
 
-  async insert(report: SentinelReport) {
+  async getByIdempotencyKey(key: string) {
+    const result = await this.pool.query<{ payload: SentinelReport }>(
+      "SELECT payload FROM sentinel_reports WHERE idempotency_key = $1 LIMIT 1",
+      [key]
+    );
+    return result.rows[0]?.payload;
+  }
+
+  async insert(report: SentinelReport, idempotencyKey?: string) {
     await this.pool.query(
-      `INSERT INTO sentinel_reports (id, user_address, created_at, payload)
-       VALUES ($1, $2, $3, $4::jsonb)`,
-      [report.id, report.userAddress?.toLowerCase() ?? null, report.createdAt, JSON.stringify(report)]
+      `INSERT INTO sentinel_reports (id, user_address, created_at, payload, idempotency_key)
+       VALUES ($1, $2, $3, $4::jsonb, $5)`,
+      [report.id, report.userAddress?.toLowerCase() ?? null, report.createdAt, JSON.stringify(report), idempotencyKey ?? null]
     );
   }
 
@@ -125,12 +141,16 @@ export class PostgresReportRepository implements ReportRepository {
         id text PRIMARY KEY,
         user_address text,
         created_at timestamptz NOT NULL,
-        payload jsonb NOT NULL
+        payload jsonb NOT NULL,
+        idempotency_key text
       );
+      ALTER TABLE sentinel_reports ADD COLUMN IF NOT EXISTS idempotency_key text;
       CREATE INDEX IF NOT EXISTS sentinel_reports_created_at_idx
         ON sentinel_reports (created_at DESC);
       CREATE INDEX IF NOT EXISTS sentinel_reports_user_address_idx
         ON sentinel_reports (user_address, created_at DESC);
+      CREATE UNIQUE INDEX IF NOT EXISTS sentinel_reports_idempotency_idx
+        ON sentinel_reports (idempotency_key) WHERE idempotency_key IS NOT NULL;
     `);
   }
 }

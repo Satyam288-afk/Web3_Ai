@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { createPublicClient, http, isAddress, verifyMessage, type Hex } from "viem";
 import { parseSiweMessage, verifySiweMessage } from "viem/siwe";
 import { supportedChains } from "@sentinelmesh/web3";
+import { MemoryAuthNonceStore, type AuthNonceStore } from "./auth-nonce-store.js";
 
 export type AuthSession = {
   address: `0x${string}`;
@@ -15,22 +16,19 @@ export function createAuthService({
   allowedDomains,
   nonceTtlMs = 5 * 60_000,
   sessionTtlMs = 7 * 24 * 60 * 60_000
+  , nonceStore = new MemoryAuthNonceStore()
 }: {
   secret: string;
   allowedDomains: string[];
   nonceTtlMs?: number;
   sessionTtlMs?: number;
+  nonceStore?: AuthNonceStore;
 }) {
   if (secret.length < 32) throw new Error("SESSION_SECRET must contain at least 32 characters");
-  const nonces = new Map<string, number>();
-
-  function issueNonce() {
+  async function issueNonce() {
     const now = Date.now();
-    for (const [nonce, expiresAt] of nonces) {
-      if (expiresAt <= now) nonces.delete(nonce);
-    }
     const nonce = randomBytes(16).toString("hex");
-    nonces.set(nonce, now + nonceTtlMs);
+    await nonceStore.issue(nonce, now + nonceTtlMs);
     return nonce;
   }
 
@@ -41,9 +39,7 @@ export function createAuthService({
     }
     if (!allowedDomains.includes(parsed.domain)) throw new Error("SIWE domain is not allowed");
 
-    const nonceExpiresAt = nonces.get(parsed.nonce);
-    nonces.delete(parsed.nonce);
-    if (!nonceExpiresAt || nonceExpiresAt <= Date.now()) throw new Error("SIWE nonce is invalid or expired");
+    if (!(await nonceStore.consume(parsed.nonce, Date.now()))) throw new Error("SIWE nonce is invalid or expired");
 
     const chain = supportedChains.find((candidate) => candidate.id === parsed.chainId);
     if (!chain) throw new Error("SIWE chain is not supported");

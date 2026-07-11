@@ -37,6 +37,19 @@ test("uses the local JSON repository when DATABASE_URL is not configured", async
   }
 });
 
+test("returns the original report for a repeated idempotency key", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "sentinelmesh-idempotency-"));
+  try {
+    const repository = new JsonReportRepository(path.join(directory, "reports.json"));
+    const report = reportFixture("idempotent-report");
+    await repository.insert(report, "wallet:request-123");
+    assert.deepEqual(await repository.getByIdempotencyKey("wallet:request-123"), report);
+    assert.equal(await repository.getByIdempotencyKey("wallet:different"), undefined);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 function reportFixture(id: string): SentinelReport {
   return {
     id,

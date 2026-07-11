@@ -27,12 +27,6 @@ services:
         value: llama-3.1-8b-instant
       - key: ZEROX_API_KEY
         sync: false
-      - key: REPORT_REGISTRY_ADDRESS
-        sync: false
-      - key: REPORT_REGISTRY_CHAIN_ID
-        value: "84532"
-      - key: REPORT_REGISTRY_RPC_URL
-        sync: false
       - key: ALLOW_CLIENT_SUPPLIED_ONCHAIN_HASH
         value: "false"
 

@@ -47,6 +47,7 @@ import {
   type SentinelReport
 } from "@sentinelmesh/shared";
 import { createAuthService } from "./auth.js";
+import { createAuthNonceStore } from "./auth-nonce-store.js";
 import { evaluateFirewall } from "./firewall.js";
 import { applyMarketEvidence, inspectMarket } from "./market-intelligence.js";
 import { getQuotePreview } from "./quote-adapter.js";
@@ -75,9 +76,15 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:3000")
   .filter(Boolean);
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
 const authCookieName = "sentinelmesh_session";
+validateProductionConfiguration({ allowedOrigins });
+const { store: authNonceStore, provider: authNonceProvider } = await createAuthNonceStore(
+  process.env.DATABASE_URL,
+  process.env.DATABASE_SSL === "require"
+);
 const authService = createAuthService({
   secret: getSessionSecret(),
-  allowedDomains: getAuthAllowedDomains(allowedOrigins)
+  allowedDomains: getAuthAllowedDomains(allowedOrigins),
+  nonceStore: authNonceStore
 });
 
 app.set("trust proxy", 1);
@@ -98,11 +105,15 @@ app.use((_req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+  if (process.env.NODE_ENV === "production") res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
 });
 app.use(rateLimit({ maxRequests: Number(process.env.API_RATE_LIMIT_PER_MINUTE ?? 120), windowMs: 60_000 }));
 app.use(express.json({ limit: "1mb" }));
-app.use(morgan("dev"));
+if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
+app.use(requestTracing());
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -127,10 +138,11 @@ app.get("/ready", async (_req, res) => {
         quoteConfigured: Boolean(process.env.ZEROX_API_KEY),
         quoteSimulationConfigured: Boolean(
           process.env.BASE_MAINNET_RPC_URL || process.env.ETHEREUM_MAINNET_RPC_URL
-        )
+        ),
+        authNonceProvider
       },
       storage: provider,
-      network: getRegistryChain().name,
+      network: getRegistryAddress() && getRegistryRpcUrl() ? getRegistryChain().name : "not-configured",
       timestamp: new Date().toISOString()
     });
   } catch {
@@ -138,8 +150,12 @@ app.get("/ready", async (_req, res) => {
   }
 });
 
-app.get("/auth/nonce", (_req, res) => {
-  res.json({ nonce: authService.issueNonce() });
+app.get("/auth/nonce", async (_req, res, next) => {
+  try {
+    res.json({ nonce: await authService.issueNonce() });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/auth/verify", async (req, res, next) => {
@@ -409,6 +425,19 @@ app.post("/reports", async (req, res, next) => {
   try {
     const body = ReportCreateRequestSchema.parse(req.body);
     const session = getAuthSession(req);
+    const suppliedIdempotencyKey = req.header("Idempotency-Key")?.trim();
+    if (suppliedIdempotencyKey && !/^[a-zA-Z0-9._:-]{8,128}$/.test(suppliedIdempotencyKey)) {
+      return res.status(400).json({ error: "Idempotency-Key must contain 8-128 safe characters" });
+    }
+    if (process.env.NODE_ENV === "production" && !suppliedIdempotencyKey) {
+      return res.status(400).json({ error: "Idempotency-Key is required for production report creation" });
+    }
+    const idempotencyKey = suppliedIdempotencyKey ? `${session?.address.toLowerCase() ?? "public"}:${suppliedIdempotencyKey}` : undefined;
+    const { repository } = await reportRepositoryPromise;
+    if (idempotencyKey) {
+      const existing = await repository.getByIdempotencyKey(idempotencyKey);
+      if (existing) return res.status(200).json(existing);
+    }
     if (body.userAddress && !session) {
       return res.status(401).json({ error: "Wallet authentication is required for wallet-owned reports" });
     }
@@ -480,8 +509,7 @@ app.post("/reports", async (req, res, next) => {
       verificationStatus: "local-only"
     };
 
-    const { repository } = await reportRepositoryPromise;
-    await repository.insert(report);
+    await repository.insert(report, idempotencyKey);
     res.status(201).json(report);
   } catch (error) {
     next(error);
@@ -848,6 +876,38 @@ function getAuthAllowedDomains(origins: string[]) {
       return origin;
     }
   });
+}
+
+function validateProductionConfiguration({ allowedOrigins }: { allowedOrigins: string[] }) {
+  if (process.env.NODE_ENV !== "production") return;
+  const errors: string[] = [];
+  if (!process.env.DATABASE_URL?.trim()) errors.push("DATABASE_URL is required in production for durable reports and nonce replay protection");
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.trim().length < 32) errors.push("SESSION_SECRET must contain at least 32 characters");
+  if (!allowedOrigins.length || allowedOrigins.some((origin) => origin === "*" || !origin.startsWith("https://"))) errors.push("ALLOWED_ORIGINS must contain explicit HTTPS origins");
+  if (!process.env.AUTH_ALLOWED_DOMAINS?.trim()) errors.push("AUTH_ALLOWED_DOMAINS is required in production");
+  if (errors.length) throw new Error(`Invalid production configuration: ${errors.join("; ")}`);
+}
+
+function requestTracing() {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const incoming = req.header("X-Request-Id");
+    const requestId = incoming && /^[a-zA-Z0-9._-]{8,128}$/.test(incoming) ? incoming : randomUUID();
+    const startedAt = Date.now();
+    res.setHeader("X-Request-Id", requestId);
+    res.on("finish", () => {
+      if (process.env.NODE_ENV !== "production") return;
+      console.log(JSON.stringify({
+        level: res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info",
+        event: "http_request",
+        requestId,
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        durationMs: Date.now() - startedAt
+      }));
+    });
+    next();
+  };
 }
 
 function rateLimit({ maxRequests, windowMs }: { maxRequests: number; windowMs: number }) {

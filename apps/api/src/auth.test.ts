@@ -9,7 +9,7 @@ const secret = "sentinelmesh-test-session-secret-32-characters";
 
 test("verifies SIWE once and rejects nonce replay", async () => {
   const auth = createAuthService({ secret, allowedDomains: ["localhost:3000"] });
-  const nonce = auth.issueNonce();
+  const nonce = await auth.issueNonce();
   const message = createSiweMessage({
     address: account.address,
     chainId: 84532,

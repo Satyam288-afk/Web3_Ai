@@ -1,49 +1,35 @@
 name: CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  node:
-    name: Node tests and build
+  application:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20.19.0"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm test --workspaces --if-present
-
-      - name: Typecheck
-        run: npm run typecheck --workspaces --if-present
-
-      - name: Build web
-        run: npm run build -w @sentinelmesh/web
+          node-version: 20.19.0
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Reject critical dependency advisories
+        run: npm audit --audit-level=critical
 
   contracts:
-    name: Foundry tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: stable
-
-      - name: Run forge tests
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge test
         working-directory: contracts
-        run: forge test -vvv
