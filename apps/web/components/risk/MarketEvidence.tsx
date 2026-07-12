@@ -6,7 +6,7 @@ export function MarketEvidence({ evidence }: { evidence?: MarketEvidenceType }) 
   const live = evidence.status === "live";
 
   return (
-    <section className="surface rounded-lg p-5">
+    <section className="border-y border-white/10 bg-black py-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="eyebrow flex items-center gap-2"><Radio size={13} /> Market evidence</div>
@@ -18,7 +18,7 @@ export function MarketEvidence({ evidence }: { evidence?: MarketEvidenceType }) 
       </div>
 
       {live ? (
-        <div className="mt-4 grid gap-px overflow-hidden rounded-md border border-white/10 bg-white/10 sm:grid-cols-4">
+        <div className="mt-5 grid border-y border-white/10 sm:grid-cols-4">
           <Metric icon={<Droplets size={15} />} label="Liquidity" value={formatUsd(evidence.liquidityUsd)} />
           <Metric icon={<Activity size={15} />} label="24h volume" value={formatUsd(evidence.volume24hUsd)} />
           <Metric icon={<Activity size={15} />} label="24h change" value={formatPercent(evidence.priceChange24h)} />
@@ -43,7 +43,7 @@ export function MarketEvidence({ evidence }: { evidence?: MarketEvidenceType }) 
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-[#101d1a]/90 p-3">
+    <div className="border-b border-white/10 bg-black p-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <div className="flex items-center gap-1.5 text-[11px] text-white/55">{icon}{label}</div>
       <div className="mt-1 text-sm font-semibold text-[#67e8f9]">{value}</div>
     </div>

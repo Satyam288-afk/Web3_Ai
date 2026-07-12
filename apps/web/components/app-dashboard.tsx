@@ -358,10 +358,14 @@ export function AppDashboard() {
       setError("Connect and authenticate the wallet before signing the safety envelope.");
       return;
     }
+    const envelope = firewallEvaluation.safetyEnvelope;
+    if (chainId !== envelope.chainId) {
+      setError(`Switch your wallet to chain ${envelope.chainId} before signing this ${intent?.chain ?? "transaction"} safety envelope.`);
+      return;
+    }
     setSigningEnvelope(true);
     setError(null);
     try {
-      const envelope = firewallEvaluation.safetyEnvelope;
       const signature = await signTypedDataAsync(safetyEnvelopeTypedData(envelope, address));
       setSafetyAttestation({
         signer: address,
@@ -399,7 +403,7 @@ export function AppDashboard() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="space-y-5">
-        <div className="rounded-2xl border border-[#22d3ee]/20 bg-white/[0.07] p-5 text-white shadow-[0_20px_80px_rgba(0,0,0,0.22)] backdrop-blur">
+        <div className="border-y border-white/10 bg-black py-6 text-white">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <div className="text-[11px] font-black uppercase text-[#67e8f9]">Step 01</div>
@@ -487,7 +491,7 @@ export function AppDashboard() {
           safetyEnvelope={firewallEvaluation?.safetyEnvelope}
           safetyAttestation={safetyAttestation}
           signingEnvelope={signingEnvelope}
-          canSignEnvelope={Boolean(firewallEvaluation && authenticatedWallet && address)}
+          canSignEnvelope={Boolean(firewallEvaluation && authenticatedWallet && address && chainId === firewallEvaluation.safetyEnvelope.chainId)}
           onSignEnvelope={signSafetyEnvelope}
         />
       </aside>
@@ -629,10 +633,14 @@ function RiskAnalysisPanel({ risk, loading, error }: { risk: RiskAnalysis | null
       <RiskSummary analysis={risk} />
       <MarketEvidence evidence={risk.marketEvidence} />
       <TopRiskFactors analysis={risk} />
-      <section>
-        <h2 className="mb-3 font-semibold text-ink">Full risk breakdown</h2>
-        <RiskFactorGrid risk={risk} />
-      </section>
+      <details className="group border-y border-white/10 bg-black">
+        <summary className="flex cursor-pointer list-none items-center justify-between py-5 text-sm font-semibold text-white/65 marker:hidden hover:text-white">
+          View all risk factors
+          <span className="text-xs font-normal text-white/30 group-open:hidden">7 signals</span>
+          <span className="hidden text-xs font-normal text-white/30 group-open:inline">Close</span>
+        </summary>
+        <div className="pb-5"><RiskFactorGrid risk={risk} /></div>
+      </details>
     </div>
   );
 }

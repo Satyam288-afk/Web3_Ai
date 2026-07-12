@@ -75,7 +75,7 @@ export function IntentInput({
           type="button"
           onClick={() => onSubmit()}
           disabled={loading || !prompt.trim()}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#22d3ee] px-5 py-2.5 text-sm font-black text-black shadow-[0_0_24px_rgba(34,211,238,0.24)] hover:bg-[#67e8f9] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1e3a8a] px-5 py-2.5 text-sm font-black text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? <Loader2 className="animate-spin" size={16} /> : <ArrowUp size={16} />}
           Review intent

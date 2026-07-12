@@ -35,7 +35,7 @@ export function WalletConnectionPanel({
   }, []);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
+    <div className="border-y border-white/10 bg-black p-5 text-white">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wallet className="text-[#67e8f9]" size={18} />
@@ -48,7 +48,7 @@ export function WalletConnectionPanel({
       </div>
 
       <div className="mt-4 space-y-3 text-sm">
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-3 border-t border-white/10 py-4">
           <div>
             <div className="text-xs font-semibold text-white/50">MetaMask</div>
             <div className="mt-1 text-sm text-white">
@@ -93,7 +93,7 @@ export function WalletConnectionPanel({
           label="Registry adapter"
           value={adapterReady ? "Configured for report anchoring" : "Placeholder only until registry metadata is supplied"}
         />
-        <div className={cn("rounded-xl border p-3", aligned ? "border-white/10 bg-black/20" : "border-amber-300/25 bg-amber-400/10")}>
+        <div className={cn("border-t py-4", aligned ? "border-white/10" : "border-amber-300/25")}>
           <div className="flex items-center gap-2 text-xs font-semibold text-white/50">
             <Network size={14} />
             Network
@@ -115,7 +115,7 @@ export function WalletConnectionPanel({
 
 function StatusRow({ good, label, value, icon }: { good: boolean; label: string; value: string; icon?: "key" }) {
   return (
-    <div className="flex gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+    <div className="flex gap-3 border-t border-white/10 py-4">
       <div className={cn("mt-0.5", good ? "text-[#67e8f9]" : "text-amber-200")}>
         {good ? <CheckCircle2 size={17} /> : icon === "key" ? <KeyRound size={17} /> : <AlertTriangle size={17} />}
       </div>

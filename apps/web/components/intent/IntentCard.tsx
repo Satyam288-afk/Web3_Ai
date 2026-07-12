@@ -82,7 +82,7 @@ export function IntentCard({
           type="button"
           onClick={onAnalyze}
           disabled={analyzing}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#22d3ee] px-4 py-2.5 text-sm font-black text-black hover:bg-[#67e8f9] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1e3a8a] px-4 py-2.5 text-sm font-black text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {analyzing ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
           {analyzing ? "Analyzing..." : "Analyze risk"}

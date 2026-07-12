@@ -39,7 +39,7 @@ export function ReportCreationPanel({
   onSignEnvelope: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
+    <div className="border-y border-white/10 bg-black p-5 text-white">
       <div className="flex items-center gap-2">
         <Database className="text-[#67e8f9]" size={18} />
         <div>
@@ -59,7 +59,7 @@ export function ReportCreationPanel({
             onClick={() => onModeChange(option)}
             className={cn(
               "rounded-lg px-2 py-2 text-xs font-bold transition",
-              mode === option ? "bg-[#22d3ee] text-black shadow-[0_0_18px_rgba(34,211,238,0.22)]" : "text-white/50 hover:text-white"
+              mode === option ? "bg-[#1e3a8a] text-white" : "text-white/50 hover:text-white"
             )}
           >
             {option}
@@ -104,7 +104,7 @@ export function ReportCreationPanel({
       <button
         onClick={onCreate}
         disabled={!canCreate || creating}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#22d3ee] px-4 py-3 text-sm font-black text-black shadow-[0_0_24px_rgba(34,211,238,0.25)] hover:bg-[#67e8f9] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#1e3a8a] px-4 py-3 text-sm font-black text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Save size={17} />
         {creating ? "Creating..." : "Generate Report"}
