@@ -24,6 +24,16 @@ body {
   font-feature-settings: "ss01" 1, "cv02" 1;
 }
 
+.landing-blue-field {
+  background:
+    radial-gradient(circle at 72% 44%, rgba(47, 112, 255, 0.18), transparent 28rem),
+    radial-gradient(circle at 22% 12%, rgba(80, 142, 255, 0.08), transparent 24rem),
+    linear-gradient(rgba(115, 160, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(115, 160, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 64px 64px, 64px 64px;
+  mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
+}
+
 button,
 input,
 select,

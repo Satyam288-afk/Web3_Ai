@@ -1,15 +1,11 @@
 "use client";
 
 import {
-  Activity,
   Bot,
   CheckCircle2,
-  FileCheck2,
-  GitBranch,
   Loader2,
   LockKeyhole,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount, useChainId, usePublicClient, useSignTypedData, useWriteContract } from "wagmi";
@@ -43,8 +39,6 @@ import { IntentCard } from "@/components/intent/IntentCard";
 import { IntentInput, intentExamples } from "@/components/intent/IntentInput";
 import { FirewallPolicyPanel } from "@/components/firewall/FirewallPolicyPanel";
 import { SafetyCertificate } from "@/components/firewall/SafetyCertificate";
-import { LazyAppControlPlane3D } from "@/components/hero/LazyAppControlPlane3D";
-import { OrchestrationPanel } from "@/components/orchestration/OrchestrationPanel";
 import { RiskFactorCard } from "@/components/risk/RiskFactorCard";
 import { MarketEvidence } from "@/components/risk/MarketEvidence";
 import { RiskSummary } from "@/components/risk/RiskSummary";
@@ -386,87 +380,14 @@ export function AppDashboard() {
 
   return (
     <main className="pb-8">
-      <section className="relative isolate overflow-hidden border-b border-[#7eed61]/10 bg-[#06100d]">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.035)_1px,transparent_1px)] bg-[length:44px_44px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_42%,rgba(22,176,105,0.19),transparent_28%),radial-gradient(circle_at_22%_58%,rgba(126,237,97,0.07),transparent_36%)]" />
-        <div className="relative mx-auto max-w-[1500px]">
-          <div className="relative min-h-[650px] overflow-hidden">
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,9,7,0.98)_0%,rgba(3,10,8,0.90)_42%,rgba(4,20,14,0.50)_100%)]" />
-            <div className="absolute inset-y-4 right-0 w-full max-w-5xl opacity-100 [filter:saturate(1.18)_contrast(1.08)]">
-              <LazyAppControlPlane3D />
-            </div>
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,8,6,0.97)_0%,rgba(2,8,6,0.86)_42%,rgba(2,8,6,0.12)_76%,rgba(2,8,6,0.42)_100%)]" />
-
-            <div className="relative z-10 grid min-h-[540px] items-center gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[0.82fr_1fr] lg:px-12 xl:px-16">
-              <div className="max-w-3xl">
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-[#7eed61]/40 bg-[#7eed61]/10 px-3 py-1.5 text-xs font-bold text-[#a8ff8d]">
-                    Live orchestration layer
-                  </span>
-                  <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/75">
-                    Testnet · non-custodial
-                  </span>
-                  <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-100">
-                    Wallet pre-sign firewall
-                  </span>
-                </div>
-
-                <h1 className="mt-8 max-w-4xl text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white [text-shadow:0_0_28px_rgba(126,237,97,0.13)] sm:text-6xl xl:text-7xl">
-                  AI transaction<br />firewall for<br /><span className="bg-gradient-to-r from-[#7eed61] via-[#78f181] to-[#4fd6a0] bg-clip-text text-transparent">DeFi wallets</span><br />and agents
-                </h1>
-                <p className="mt-6 max-w-2xl text-base font-semibold leading-8 text-white/80 sm:text-lg">
-                  Decode intent, map protocol trust, score risk, enforce signing policy, and save verifiable evidence before a wallet or AI agent signs.
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <a
-                    href="#workflow"
-                    className="inline-flex min-w-56 items-center justify-center gap-2 rounded-full bg-[#7eed61] px-7 py-4 text-sm font-black text-black shadow-[0_0_30px_rgba(126,237,97,0.38)] transition hover:-translate-y-0.5"
-                  >
-                    Start risk review
-                    <Activity size={17} />
-                  </a>
-                  <a
-                    href="/reports"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white hover:border-[#7eed61]/55 hover:text-[#a8ff8d]"
-                  >
-                    View reports
-                    <FileCheck2 size={17} />
-                  </a>
-                </div>
-                <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-white/45">
-                  <ShieldCheck size={15} className="text-[#7eed61]" />
-                  Your keys stay yours. SentinelMesh never takes custody.
-                </div>
-              </div>
-
-              <div className="relative hidden min-h-[320px] lg:block" aria-hidden="true">
-                <div className="absolute bottom-10 right-5 w-80 rounded-2xl border border-[#7eed61]/20 bg-[#050a08]/82 p-5 text-white shadow-[0_28px_90px_rgba(0,0,0,0.5),0_0_46px_rgba(126,237,97,0.10)] backdrop-blur-xl">
-                  <div className="flex items-center justify-between text-xs font-black text-[#a8ff8d]">
-                    ORCHESTRATOR
-                    <span>{firewallEvaluation?.decision ?? "WAITING"}</span>
-                  </div>
-                  <div className="mt-3 space-y-2 text-[11px] font-semibold text-white/60">
-                    {[
-                      intent ? "IntentAgent parsed request" : "IntentAgent standing by",
-                      risk ? `RiskAgent scored ${risk.riskScore}/100` : "RiskAgent awaiting intent",
-                      firewallEvaluation ? `Firewall gate: ${firewallEvaluation.decision}` : "Policy gate armed"
-                    ].map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#7eed61]" />
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative z-10 mx-5 mb-6 grid overflow-hidden rounded-2xl border border-white/10 bg-[#07100d]/88 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-xl sm:mx-8 md:grid-cols-3 lg:mx-12 xl:mx-16">
-              <HeroStatus icon={<Activity size={22} />} value={risk ? `${risk.riskScore}` : "7"} label={risk ? "Risk score" : "Risk signals"} detail="Detected in real time" />
-              <HeroStatus icon={<ShieldCheck size={22} />} value={firewallEvaluation?.decision ?? "READY"} label="Firewall" detail="Policy engine active" />
-              <HeroStatus icon={<GitBranch size={22} />} value={orchestrationRun?.status ?? "SIM"} label="Mode" detail="Simulation enabled" accent="violet" />
-            </div>
+      <section className="border-b border-white/10 bg-[#050706] px-4 py-10 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-5">
+          <div>
+            <div className="text-xs font-semibold text-[#8db8ff]">Transaction review</div>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Check the risk before you sign.</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/45">Describe the action, review the analysis, then decide whether to continue.</p>
           </div>
+          <div className="flex items-center gap-2 text-xs text-white/40"><ShieldCheck size={15} className="text-[#8db8ff]" /> Non-custodial · user-controlled</div>
         </div>
       </section>
 
@@ -474,22 +395,7 @@ export function AppDashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(126,237,97,0.16),transparent_28%),radial-gradient(circle_at_90%_18%,rgba(33,214,151,0.12),transparent_30%),linear-gradient(180deg,#07130f_0%,#0a1712_55%,#07110d_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.035)_1px,transparent_1px)] bg-[length:42px_42px]" />
         <div className="relative mx-auto max-w-7xl">
-      <div className="mb-5 grid gap-3 md:grid-cols-3">
-        <CryptoStat icon={<Sparkles size={16} />} label="Firewall decision" value={firewallEvaluation?.decision ?? "Waiting"} tone={firewallEvaluation?.decision === "BLOCK" ? "danger" : firewallEvaluation?.decision === "WARN" ? "warning" : "success"} />
-        <CryptoStat icon={<Activity size={16} />} label="Risk score" value={risk ? `${risk.riskScore}/100` : "Not scored"} tone={risk?.riskLevel === "Critical" || risk?.riskLevel === "High" ? "danger" : risk?.riskLevel === "Medium" ? "warning" : "success"} />
-        <CryptoStat icon={<GitBranch size={16} />} label="Orchestration" value={orchestrationRun?.status ?? "Ready"} tone={orchestrationRun?.status === "blocked" ? "danger" : orchestrationRun?.status === "needs-review" ? "warning" : "success"} />
-      </div>
-
       <WorkflowProgress intent={intent} risk={risk} routeAnalysis={routeAnalysis} firewallEvaluation={firewallEvaluation} report={report} />
-
-      <div className="mt-5">
-        <OrchestrationPanel
-          run={orchestrationRun}
-          loading={orchestrationLoading}
-          error={orchestrationError}
-          onRun={runOrchestration}
-        />
-      </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="space-y-5">
@@ -589,33 +495,6 @@ export function AppDashboard() {
       </div>
       </section>
     </main>
-  );
-}
-
-function CryptoStat({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: "success" | "warning" | "danger" }) {
-  return (
-    <div className="relative px-1 py-2 text-white">
-      <div
-        className={cn(
-          "absolute left-0 top-2 h-9 w-px",
-          tone === "danger" ? "bg-red-300/70" : tone === "warning" ? "bg-amber-300/70" : "bg-[#7eed61]/75"
-        )}
-      />
-      <div className={cn("ml-4 flex items-center gap-2 text-[11px] font-black uppercase", tone === "danger" ? "text-red-200" : tone === "warning" ? "text-amber-200" : "text-[#a8ff8d]")}>
-        {icon}
-        {label}
-      </div>
-      <div className="ml-4 mt-1 text-xl font-black capitalize text-white">{value}</div>
-    </div>
-  );
-}
-
-function HeroStatus({ icon, value, label, detail, accent = "green" }: { icon: React.ReactNode; value: string; label: string; detail: string; accent?: "green" | "violet" }) {
-  return (
-    <div className="flex items-center gap-4 border-b border-white/8 px-6 py-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
-      <span className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-full border", accent === "violet" ? "border-violet-400/20 bg-violet-400/8 text-violet-300" : "border-[#7eed61]/20 bg-[#7eed61]/8 text-[#7eed61]")}>{icon}</span>
-      <div><div className={cn("text-2xl font-black uppercase", accent === "violet" ? "text-violet-300" : "text-[#7eed61]")}>{value}</div><div className="mt-0.5 text-sm font-bold text-white/75">{label}</div><div className="mt-1 text-xs text-white/35">{detail}</div></div>
-    </div>
   );
 }
 
