@@ -21,12 +21,16 @@ async function proxyRequest(request: Request, context: RouteContext) {
   const targetUrl = new URL(path.join("/"), withTrailingSlash(BACKEND_URL));
   targetUrl.search = new URL(request.url).search;
 
+  const forwardedHeaders = new Headers({
+    "Content-Type": request.headers.get("Content-Type") ?? "application/json",
+    "X-Request-Id": request.headers.get("X-Request-Id") ?? crypto.randomUUID()
+  });
+  forwardHeader(request.headers, forwardedHeaders, "Cookie");
+  forwardHeader(request.headers, forwardedHeaders, "Idempotency-Key");
+
   const response = await fetch(targetUrl, {
     method: request.method,
-    headers: {
-      "Content-Type": request.headers.get("Content-Type") ?? "application/json",
-      "X-Request-Id": request.headers.get("X-Request-Id") ?? crypto.randomUUID()
-    },
+    headers: forwardedHeaders,
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
     cache: "no-store"
   });
@@ -43,6 +47,11 @@ async function proxyRequest(request: Request, context: RouteContext) {
     statusText: response.statusText,
     headers
   });
+}
+
+function forwardHeader(source: Headers, target: Headers, name: string) {
+  const value = source.get(name);
+  if (value) target.set(name, value);
 }
 
 function withTrailingSlash(value: string) {

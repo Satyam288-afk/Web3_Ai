@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, ArrowUp, Loader2, Sparkles } from "lucide-react";
+import { useRef } from "react";
+import { AlertTriangle, ArrowUp, ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
 
 export const intentExamples = [
   {
@@ -48,6 +49,12 @@ export function IntentInput({
   onPromptChange: (prompt: string) => void;
   onSubmit: (prompt?: string) => void;
 }) {
+  const fixtureRailRef = useRef<HTMLDivElement>(null);
+
+  function scrollFixtures(direction: -1 | 1) {
+    fixtureRailRef.current?.scrollBy({ left: direction * 300, behavior: "smooth" });
+  }
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
       <textarea
@@ -63,21 +70,34 @@ export function IntentInput({
       />
       <div className="mt-3 grid gap-3">
         <div>
-          <div className="mb-2 text-[11px] font-black uppercase text-white/35">Demo fixtures</div>
-          <div className="sentinel-horizontal-strip">
-            {intentExamples.map((item) => (
-              <button
-                type="button"
-                key={item.label}
-                onClick={() => onSubmit(item.prompt)}
-                disabled={loading}
-                title={item.prompt}
-                className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-left text-xs font-bold text-white/70 hover:border-[#7eed61]/45 hover:bg-[#7eed61]/10 hover:text-[#a8ff8d] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <span className="block text-white">{item.label}</span>
-                <span className="mt-1 block font-semibold text-white/40">{item.detail}</span>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div className="text-[11px] font-black uppercase text-white/35">Demo fixtures</div>
+            <div className="flex items-center gap-1">
+              <span className="mr-1 hidden text-[10px] font-bold text-white/30 sm:inline">Scroll scenarios</span>
+              <button type="button" aria-label="Previous demo fixtures" onClick={() => scrollFixtures(-1)} className="fixture-scroll-button">
+                <ChevronLeft size={15} />
               </button>
-            ))}
+              <button type="button" aria-label="Next demo fixtures" onClick={() => scrollFixtures(1)} className="fixture-scroll-button">
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+          <div className="relative">
+            <div ref={fixtureRailRef} className="sentinel-horizontal-strip" tabIndex={0} aria-label="Demo fixture scenarios">
+              {intentExamples.map((item) => (
+                <button
+                  type="button"
+                  key={item.label}
+                  onClick={() => onSubmit(item.prompt)}
+                  disabled={loading}
+                  title={item.prompt}
+                  className="rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-left text-xs font-bold text-white/70 hover:border-[#7eed61]/45 hover:bg-[#7eed61]/10 hover:text-[#a8ff8d] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="block text-white">{item.label}</span>
+                  <span className="mt-1 block font-semibold text-white/40">{item.detail}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <button

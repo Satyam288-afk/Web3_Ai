@@ -96,7 +96,7 @@ app.use(
       return callback(new Error("Origin is not allowed by SentinelMesh CORS policy"));
     },
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "X-Request-Id"],
+    allowedHeaders: ["Content-Type", "X-Request-Id", "Idempotency-Key"],
     credentials: true
   })
 );
