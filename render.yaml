@@ -1,6 +1,7 @@
 services:
   - type: web
     name: sentinelmesh-api
+    plan: free
     runtime: docker
     dockerfilePath: ./Dockerfile.api
     healthCheckPath: /ready
@@ -32,5 +33,6 @@ services:
 
 databases:
   - name: sentinelmesh-db
+    plan: free
     databaseName: sentinelmesh
     user: sentinelmesh
