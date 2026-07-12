@@ -49,7 +49,7 @@ export function IntentInput({
   onSubmit: (prompt?: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+    <div>
       <textarea
         aria-label="DeFi intent"
         value={prompt}
@@ -59,7 +59,7 @@ export function IntentInput({
         }}
         placeholder="Describe the DeFi action you want to assess..."
         rows={3}
-        className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.07] p-4 text-base leading-7 text-white outline-none placeholder:text-white/35 focus:border-[#22d3ee]/40"
+        className="w-full resize-none border-0 border-b border-white/15 bg-transparent px-0 py-5 text-xl leading-8 text-white outline-none placeholder:text-white/35 focus:border-blue-500"
       />
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
@@ -83,7 +83,7 @@ export function IntentInput({
       </div>
       <div className="mt-3 flex items-center gap-2 text-[11px] text-white/40">
         <Sparkles size={13} className="text-[#67e8f9]" />
-        AI-assisted when configured, deterministic fallback when unavailable. Press Cmd/Ctrl + Enter to submit.
+        Deterministic analysis with live-data fallback. Press Cmd/Ctrl + Enter to submit.
       </div>
 
       {error && (

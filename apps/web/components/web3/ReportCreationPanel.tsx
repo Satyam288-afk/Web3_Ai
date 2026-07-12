@@ -39,7 +39,7 @@ export function ReportCreationPanel({
   onSignEnvelope: () => void;
 }) {
   return (
-    <div className="border-y border-white/10 bg-black p-5 text-white">
+    <div className="border-t border-white/10 pt-8 text-white">
       <div className="flex items-center gap-2">
         <Database className="text-[#67e8f9]" size={18} />
         <div>

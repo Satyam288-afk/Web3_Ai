@@ -395,15 +395,13 @@ export function AppDashboard() {
         </div>
       </section>
 
-      <section id="workflow" className="sentinel-dark-page relative scroll-mt-24 overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_90%_18%,rgba(56,189,248,0.12),transparent_30%),linear-gradient(180deg,#020407_0%,#04070c_55%,#02050a_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.035)_1px,transparent_1px)] bg-[length:42px_42px]" />
+      <section id="workflow" className="sentinel-dark-page relative scroll-mt-24 overflow-hidden bg-black px-4 py-8 sm:px-6 lg:px-8">
         <div className="relative mx-auto max-w-7xl">
       <WorkflowProgress intent={intent} risk={risk} routeAnalysis={routeAnalysis} firewallEvaluation={firewallEvaluation} report={report} />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="space-y-5">
-        <div className="border-y border-white/10 bg-black py-6 text-white">
+        <div className="py-6 text-white">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <div className="text-[11px] font-black uppercase text-[#67e8f9]">Step 01</div>
@@ -414,7 +412,7 @@ export function AppDashboard() {
           <IntentInput prompt={prompt} loading={loading} error={error} onPromptChange={setPrompt} onSubmit={parseIntent} />
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+        {intent && <div className="grid gap-8 border-t border-white/10 pt-8 lg:grid-cols-[0.9fr_1.1fr]">
           <IntentCard
             intent={intent}
             analyzing={analyzingRisk || routing}
@@ -433,13 +431,13 @@ export function AppDashboard() {
             }}
           />
           <AgentTimeline trace={trace} loading={loading} />
-        </div>
+        </div>}
 
-        <RiskAnalysisPanel risk={risk} loading={analyzingRisk} error={riskError} />
+        {(intent || analyzingRisk || riskError) && <RiskAnalysisPanel risk={risk} loading={analyzingRisk} error={riskError} />}
 
-        <RouteComparison routeAnalysis={routeAnalysis} selectedRouteId={selectedRouteId} loading={routing} error={routeError} onSelect={setSelectedRouteId} />
-        <QuotePreviewPanel quote={quotePreview} loading={quoteLoading} error={quoteError} />
-        <FirewallPolicyPanel
+        {(routeAnalysis || routing || routeError) && <RouteComparison routeAnalysis={routeAnalysis} selectedRouteId={selectedRouteId} loading={routing} error={routeError} onSelect={setSelectedRouteId} />}
+        {(quotePreview || quoteLoading || quoteError) && <QuotePreviewPanel quote={quotePreview} loading={quoteLoading} error={quoteError} />}
+        {risk && <FirewallPolicyPanel
           policy={policy}
           evaluation={firewallEvaluation}
           loading={firewallLoading}
@@ -456,11 +454,11 @@ export function AppDashboard() {
             setOrchestrationRun(null);
           }}
           onEvaluate={() => evaluateFirewall()}
-        />
+        />}
         <SafetyCertificate evaluation={firewallEvaluation} />
       </section>
 
-      <aside className="space-y-5">
+      <aside className="space-y-10 lg:border-l lg:border-white/10 lg:pl-8">
         <WalletConnectionPanel
           address={address}
           connected={isConnected}
@@ -471,7 +469,7 @@ export function AppDashboard() {
           adapterReady={placeholderReportRegistryAdapter.canWrite(selectedNetworkFromId)}
         />
 
-        <ReportCreationPanel
+        {firewallEvaluation && <ReportCreationPanel
           mode={mode}
           selectedNetwork={selectedNetworkFromId}
           canCreate={Boolean(
@@ -493,7 +491,7 @@ export function AppDashboard() {
           signingEnvelope={signingEnvelope}
           canSignEnvelope={Boolean(firewallEvaluation && authenticatedWallet && address && chainId === firewallEvaluation.safetyEnvelope.chainId)}
           onSignEnvelope={signSafetyEnvelope}
-        />
+        />}
       </aside>
       </div>
       </div>
@@ -558,7 +556,7 @@ function WorkflowProgress({
 function AgentTimeline({ trace, loading }: { trace: AgentResult[]; loading: boolean }) {
   const expected = ["IntentAgent", "RiskAgent", "RouteAgent", "ReportAgent", "VerificationAgent"];
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
+    <div className="border-y border-white/10 py-6 text-white">
       <div className="text-[11px] font-black uppercase text-[#67e8f9]">Agent mesh</div>
       <h2 className="mt-1 font-black text-white">Analysis trace</h2>
       <div className="mt-4 space-y-3">

@@ -20,7 +20,7 @@ export function IntentCard({
 }) {
   if (!intent) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.05] p-5 text-white backdrop-blur">
+      <div className="border-y border-white/10 py-6 text-white">
         <h2 className="font-black text-white">Parsed Intent</h2>
         <p className="mt-3 text-sm text-white/50">Submit an intent to review the structured fields before analysis.</p>
       </div>
@@ -44,7 +44,7 @@ export function IntentCard({
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
+    <div className="border-y border-white/10 py-6 text-white">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-black uppercase text-[#67e8f9]">Step 02</div>

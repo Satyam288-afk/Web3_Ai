@@ -35,7 +35,7 @@ export function WalletConnectionPanel({
   }, []);
 
   return (
-    <div className="border-y border-white/10 bg-black p-5 text-white">
+    <div className="text-white">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wallet className="text-[#67e8f9]" size={18} />
