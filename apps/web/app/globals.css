@@ -220,30 +220,6 @@ textarea:focus-visible {
   scrollbar-color: rgba(34,211,238, 0.42) rgba(255, 255, 255, 0.05);
 }
 
-.fixture-scroll-button {
-  display: inline-flex;
-  height: 1.75rem;
-  width: 1.75rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(34,211,238, 0.22);
-  border-radius: 999px;
-  background: rgba(34,211,238, 0.08);
-  color: rgba(103,232,249, 0.8);
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
-}
-
-.fixture-scroll-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(34,211,238, 0.5);
-  background: rgba(34,211,238, 0.16);
-}
-
-.fixture-scroll-button:focus-visible {
-  outline: 2px solid rgba(103,232,249, 0.85);
-  outline-offset: 2px;
-}
-
 .sentinel-horizontal-strip > * {
   flex: 0 0 min(260px, 78vw);
   scroll-snap-align: start;
