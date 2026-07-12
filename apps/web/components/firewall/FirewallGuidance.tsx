@@ -56,7 +56,7 @@ export function RecoveryActions({ evaluation }: { evaluation: FirewallEvaluation
       <div className="mt-3 grid gap-2">
         {actions.map((action, index) => (
           <div key={action} className="flex gap-3 rounded-md bg-white p-3 text-xs leading-5 text-muted">
-            <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", evaluation.decision === "BLOCK" ? "bg-red-50 text-danger" : "bg-emerald-50 text-success")}>
+            <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", evaluation.decision === "BLOCK" ? "bg-red-50 text-danger" : "bg-cyan-50 text-success")}>
               {index + 1}
             </span>
             {action}

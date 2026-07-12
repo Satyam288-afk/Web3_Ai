@@ -6,22 +6,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#eef8f1",
-        panel: "#ffffff",
-        panel2: "#f5faf6",
-        border: "#d7e7dc",
-        ink: "#102a21",
-        muted: "#60756b",
-        teal: "#138a61",
+        background: "#020407",
+        panel: "#070b12",
+        panel2: "#0b1220",
+        border: "#1e293b",
+        ink: "#e5edf8",
+        muted: "#8290a3",
+        teal: "#0891b2",
         violet: "#7357d9",
         coral: "#ea715f",
         danger: "#d94b58",
         warning: "#b7791f",
-        success: "#16845b"
+        success: "#22d3ee"
       },
       boxShadow: {
-        glow: "0 1px 2px rgba(16,42,33,0.05), 0 18px 50px rgba(32,93,68,0.10)",
-        lift: "0 10px 30px rgba(32,93,68,0.12)"
+        glow: "0 1px 2px rgba(15,23,42,0.5), 0 18px 50px rgba(8,145,178,0.10)",
+        lift: "0 10px 30px rgba(8,145,178,0.12)"
       }
     }
   },

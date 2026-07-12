@@ -38,9 +38,9 @@ export function WalletConnectionPanel({
     <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Wallet className="text-[#a8ff8d]" size={18} />
+          <Wallet className="text-[#67e8f9]" size={18} />
           <div>
-            <div className="text-[11px] font-black uppercase text-[#a8ff8d]">Signer</div>
+            <div className="text-[11px] font-black uppercase text-[#67e8f9]">Signer</div>
             <h2 className="mt-1 font-black text-white">Wallet</h2>
           </div>
         </div>
@@ -56,13 +56,13 @@ export function WalletConnectionPanel({
             </div>
           </div>
           {metaMaskInstalled ? (
-            <span className="rounded bg-[#7eed61]/12 px-2 py-1 text-xs font-semibold text-[#a8ff8d]">Ready</span>
+            <span className="rounded bg-[#22d3ee]/12 px-2 py-1 text-xs font-semibold text-[#67e8f9]">Ready</span>
           ) : (
             <a
               href="https://metamask.io/download/"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/10 bg-white/[0.06] px-2.5 py-2 text-xs font-semibold text-white hover:border-[#7eed61]/40"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/10 bg-white/[0.06] px-2.5 py-2 text-xs font-semibold text-white hover:border-[#22d3ee]/40"
             >
               Install
               <ExternalLink size={13} />
@@ -116,7 +116,7 @@ export function WalletConnectionPanel({
 function StatusRow({ good, label, value, icon }: { good: boolean; label: string; value: string; icon?: "key" }) {
   return (
     <div className="flex gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
-      <div className={cn("mt-0.5", good ? "text-[#a8ff8d]" : "text-amber-200")}>
+      <div className={cn("mt-0.5", good ? "text-[#67e8f9]" : "text-amber-200")}>
         {good ? <CheckCircle2 size={17} /> : icon === "key" ? <KeyRound size={17} /> : <AlertTriangle size={17} />}
       </div>
       <div>

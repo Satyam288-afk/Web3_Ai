@@ -18,9 +18,9 @@ export function TransactionStatePanel({
   const failed = state.state === "failed";
 
   return (
-    <div className={cn("rounded-xl border p-3 text-sm", failed ? "border-red-300/25 bg-red-500/12" : success ? "border-[#7eed61]/25 bg-[#7eed61]/10" : "border-white/10 bg-black/20")}>
+    <div className={cn("rounded-xl border p-3 text-sm", failed ? "border-red-300/25 bg-red-500/12" : success ? "border-[#22d3ee]/25 bg-[#22d3ee]/10" : "border-white/10 bg-black/20")}>
       <div className="flex items-center gap-2 font-semibold text-white">
-        {busy ? <Loader2 className="animate-spin text-[#a8ff8d]" size={17} /> : failed ? <AlertTriangle className="text-red-200" size={17} /> : success ? <CheckCircle2 className="text-[#a8ff8d]" size={17} /> : <Clock3 className="text-white/40" size={17} />}
+        {busy ? <Loader2 className="animate-spin text-[#67e8f9]" size={17} /> : failed ? <AlertTriangle className="text-red-200" size={17} /> : success ? <CheckCircle2 className="text-[#67e8f9]" size={17} /> : <Clock3 className="text-white/40" size={17} />}
         {state.label}
       </div>
       <p className="mt-2 text-xs leading-5 text-white/50">{state.error ?? state.description}</p>
@@ -28,7 +28,7 @@ export function TransactionStatePanel({
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-white/10 bg-white/[0.06] p-2 text-xs">
           <span className="text-white/50">Tx</span>
           {explorerUrl ? (
-            <a href={explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#a8ff8d] underline">
+            <a href={explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#67e8f9] underline">
               {shortHash(state.txHash)}
               <ExternalLink size={13} />
             </a>

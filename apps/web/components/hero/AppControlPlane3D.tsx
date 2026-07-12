@@ -51,8 +51,8 @@ export function AppControlPlane3D() {
     root.add(blockGroup);
 
     const blockMaterial = new THREE.MeshStandardMaterial({
-      color: 0x10382d,
-      emissive: 0x0f8f69,
+      color: 0x081426,
+      emissive: 0x075985,
       emissiveIntensity: 0.12,
       metalness: 0.35,
       roughness: 0.38
@@ -76,7 +76,7 @@ export function AppControlPlane3D() {
     }
 
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0x39d5a4,
+      color: 0x38bdf8,
       transparent: true,
       opacity: 0.42
     });
@@ -93,7 +93,7 @@ export function AppControlPlane3D() {
     });
 
     const nodeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x7ee7bf,
+      color: 0x7dd3fc,
       transparent: true,
       opacity: 0.88
     });
@@ -123,8 +123,8 @@ export function AppControlPlane3D() {
     const shield = new THREE.Mesh(
       new THREE.ExtrudeGeometry(shieldShape, { depth: 0.18, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.035, bevelThickness: 0.04 }),
       new THREE.MeshStandardMaterial({
-        color: 0x102a21,
-        emissive: 0x16a37a,
+        color: 0x0b1220,
+        emissive: 0x0ea5e9,
         emissiveIntensity: 0.24,
         metalness: 0.45,
         roughness: 0.28
@@ -153,7 +153,7 @@ export function AppControlPlane3D() {
     const scan = new THREE.Mesh(
       new THREE.PlaneGeometry(6.4, 2.3),
       new THREE.MeshBasicMaterial({
-        color: 0x37d4a1,
+        color: 0x22d3ee,
         transparent: true,
         opacity: 0.12,
         side: THREE.DoubleSide,
@@ -164,8 +164,8 @@ export function AppControlPlane3D() {
     scan.rotation.y = -0.52;
     root.add(scan);
 
-    scene.add(new THREE.AmbientLight(0xeafff6, 1.65));
-    const key = new THREE.DirectionalLight(0xcffff0, 2.2);
+    scene.add(new THREE.AmbientLight(0xeff6ff, 1.65));
+    const key = new THREE.DirectionalLight(0xdbeafe, 2.2);
     key.position.set(4, 5, 6);
     scene.add(key);
     const accent = new THREE.PointLight(0x8b5cf6, 6.5, 12);
@@ -243,12 +243,12 @@ export function AppControlPlane3D() {
   if (webglUnavailable) {
     return (
       <div className="relative h-full w-full overflow-hidden" data-testid="app-control-plane-3d-fallback" aria-hidden="true">
-        <div className="absolute left-[56%] top-1/2 h-28 w-28 -translate-y-1/2 rotate-45 rounded-xl border border-teal/25 bg-ink/10 shadow-[0_0_70px_rgba(19,138,97,0.22)]" />
+        <div className="absolute left-[56%] top-1/2 h-28 w-28 -translate-y-1/2 rotate-45 rounded-xl border border-teal/25 bg-ink/10 shadow-[0_0_70px_rgba(8,145,178,0.22)]" />
         <div className="absolute left-[48%] top-[24%] h-px w-64 rotate-12 bg-teal/25" />
         <div className="absolute left-[44%] top-[58%] h-px w-72 -rotate-6 bg-violet/20" />
         <div className="absolute left-[68%] top-[36%] h-3 w-3 rounded-full bg-teal/40" />
         <div className="absolute left-[76%] top-[52%] h-2 w-2 rounded-full bg-violet/40" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_42%,rgba(19,138,97,0.18),transparent_28%),radial-gradient(circle_at_78%_48%,rgba(115,87,217,0.14),transparent_26%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_42%,rgba(8,145,178,0.18),transparent_28%),radial-gradient(circle_at_78%_48%,rgba(115,87,217,0.14),transparent_26%)]" />
       </div>
     );
   }

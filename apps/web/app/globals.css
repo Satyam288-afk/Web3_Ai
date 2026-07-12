@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -17,10 +17,8 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(213, 241, 222, 0.88) 0, rgba(238, 248, 241, 0) 26rem),
-    #eef8f1;
-  color: #102a21;
+  background: #020407;
+  color: #e5edf8;
   font-feature-settings: "ss01" 1, "cv02" 1;
 }
 
@@ -100,25 +98,25 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(19, 138, 97, 0.22);
+  outline: 3px solid rgba(34, 211, 238, 0.24);
   outline-offset: 2px;
 }
 
 .mesh-grid {
   background-image:
-    linear-gradient(rgba(31, 106, 76, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 106, 76, 0.045) 1px, transparent 1px);
+    linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .surface {
-  border: 1px solid #d7e7dc;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 1px 2px rgba(16, 42, 33, 0.04), 0 16px 44px rgba(32, 93, 68, 0.07);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(7, 11, 18, 0.94);
+  box-shadow: 0 1px 2px rgba(2, 6, 23, 0.4), 0 16px 44px rgba(2, 132, 199, 0.07);
 }
 
 .eyebrow {
-  color: #138a61;
+  color: #0891b2;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -129,9 +127,9 @@ textarea:focus-visible {
   min-height: calc(100vh - 65px);
   color: rgba(255, 255, 255, 0.88);
   background:
-    radial-gradient(circle at 12% 0%, rgba(126, 237, 97, 0.14), transparent 28%),
-    radial-gradient(circle at 88% 16%, rgba(33, 214, 151, 0.12), transparent 30%),
-    linear-gradient(180deg, #07130f 0%, #0a1712 55%, #07110d 100%);
+    radial-gradient(circle at 12% 0%, rgba(34,211,238, 0.14), transparent 28%),
+    radial-gradient(circle at 88% 16%, rgba(56,189,248, 0.12), transparent 30%),
+    linear-gradient(180deg, #020407 0%, #04070c 55%, #02050a 100%);
 }
 
 .sentinel-dark-page .surface,
@@ -146,7 +144,7 @@ textarea:focus-visible {
 .sentinel-dark-page .bg-white\/\[0\.06\],
 .sentinel-dark-page .bg-white\/\[0\.07\],
 .sentinel-dark-page .bg-panel2,
-.sentinel-dark-page .bg-emerald-50,
+.sentinel-dark-page .bg-cyan-50,
 .sentinel-dark-page .bg-amber-50,
 .sentinel-dark-page .bg-red-50,
 .sentinel-dark-page .bg-violet\/5 {
@@ -170,7 +168,7 @@ textarea:focus-visible {
 }
 
 .sentinel-dark-page .text-success {
-  color: #a8ff8d;
+  color: #67e8f9;
 }
 
 .sentinel-dark-page .border-border {
@@ -191,23 +189,23 @@ textarea:focus-visible {
 }
 
 .sentinel-dark-page input[type="range"] {
-  accent-color: #7eed61;
+  accent-color: #22d3ee;
   background-color: transparent;
 }
 
 .sentinel-dark-page input[type="checkbox"] {
-  accent-color: #7eed61;
+  accent-color: #22d3ee;
 }
 
 .sentinel-dark-page button.bg-ink,
 .sentinel-dark-page a.bg-ink {
-  background-color: #7eed61;
-  color: #07130f;
-  box-shadow: 0 0 24px rgba(126, 237, 97, 0.24);
+  background-color: #22d3ee;
+  color: #020407;
+  box-shadow: 0 0 24px rgba(34,211,238, 0.24);
 }
 
 .sentinel-dark-page .eyebrow {
-  color: #a8ff8d;
+  color: #67e8f9;
 }
 
 .sentinel-horizontal-strip {
@@ -219,7 +217,7 @@ textarea:focus-visible {
   overscroll-behavior-inline: contain;
   scrollbar-width: thin;
   scrollbar-gutter: stable;
-  scrollbar-color: rgba(126, 237, 97, 0.42) rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(34,211,238, 0.42) rgba(255, 255, 255, 0.05);
 }
 
 .fixture-scroll-button {
@@ -228,21 +226,21 @@ textarea:focus-visible {
   width: 1.75rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(126, 237, 97, 0.22);
+  border: 1px solid rgba(34,211,238, 0.22);
   border-radius: 999px;
-  background: rgba(126, 237, 97, 0.08);
-  color: rgba(168, 255, 141, 0.8);
+  background: rgba(34,211,238, 0.08);
+  color: rgba(103,232,249, 0.8);
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
 .fixture-scroll-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(126, 237, 97, 0.5);
-  background: rgba(126, 237, 97, 0.16);
+  border-color: rgba(34,211,238, 0.5);
+  background: rgba(34,211,238, 0.16);
 }
 
 .fixture-scroll-button:focus-visible {
-  outline: 2px solid rgba(168, 255, 141, 0.85);
+  outline: 2px solid rgba(103,232,249, 0.85);
   outline-offset: 2px;
 }
 
@@ -267,7 +265,7 @@ textarea:focus-visible {
 
 .sentinel-horizontal-strip::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(50, 136, 75, 0.8), rgba(126, 237, 97, 0.85));
+  background: linear-gradient(90deg, rgba(14,116,144, 0.8), rgba(34,211,238, 0.85));
 }
 
 .sentinel-depth-card {
@@ -277,7 +275,7 @@ textarea:focus-visible {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.09) inset,
     0 24px 70px rgba(0, 0, 0, 0.34),
-    0 0 44px rgba(126, 237, 97, 0.07);
+    0 0 44px rgba(34,211,238, 0.07);
   transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 }
 
@@ -287,23 +285,23 @@ textarea:focus-visible {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(126, 237, 97, 0.08), transparent 32%, transparent 72%, rgba(33, 214, 151, 0.05));
+  background: linear-gradient(135deg, rgba(34,211,238, 0.08), transparent 32%, transparent 72%, rgba(56,189,248, 0.05));
 }
 
 .sentinel-depth-card:hover {
   transform: perspective(1100px) rotateX(0deg) translateY(-3px) translateZ(8px);
-  border-color: rgba(126, 237, 97, 0.27);
+  border-color: rgba(34,211,238, 0.27);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.12) inset,
     0 32px 90px rgba(0, 0, 0, 0.42),
-    0 0 54px rgba(126, 237, 97, 0.11);
+    0 0 54px rgba(34,211,238, 0.11);
 }
 
 .agent-3d-stage {
   background:
-    radial-gradient(circle at 78% 10%, rgba(126, 237, 97, 0.11), transparent 25rem),
-    radial-gradient(circle at 18% 38%, rgba(33, 214, 151, 0.08), transparent 30rem),
-    linear-gradient(180deg, #06100c 0%, #081611 100%);
+    radial-gradient(circle at 78% 10%, rgba(34,211,238, 0.11), transparent 25rem),
+    radial-gradient(circle at 18% 38%, rgba(56,189,248, 0.08), transparent 30rem),
+    linear-gradient(180deg, #020407 0%, #050912 100%);
 }
 
 .agent-3d-stage .surface {

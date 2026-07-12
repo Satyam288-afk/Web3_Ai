@@ -392,17 +392,17 @@ export function AppDashboard() {
       </section>
 
       <section id="workflow" className="sentinel-dark-page relative scroll-mt-24 overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(126,237,97,0.16),transparent_28%),radial-gradient(circle_at_90%_18%,rgba(33,214,151,0.12),transparent_30%),linear-gradient(180deg,#07130f_0%,#0a1712_55%,#07110d_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(126,237,97,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(126,237,97,0.035)_1px,transparent_1px)] bg-[length:42px_42px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_90%_18%,rgba(56,189,248,0.12),transparent_30%),linear-gradient(180deg,#020407_0%,#04070c_55%,#02050a_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.035)_1px,transparent_1px)] bg-[length:42px_42px]" />
         <div className="relative mx-auto max-w-7xl">
       <WorkflowProgress intent={intent} risk={risk} routeAnalysis={routeAnalysis} firewallEvaluation={firewallEvaluation} report={report} />
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="space-y-5">
-        <div className="rounded-2xl border border-[#7eed61]/20 bg-white/[0.07] p-5 text-white shadow-[0_20px_80px_rgba(0,0,0,0.22)] backdrop-blur">
+        <div className="rounded-2xl border border-[#22d3ee]/20 bg-white/[0.07] p-5 text-white shadow-[0_20px_80px_rgba(0,0,0,0.22)] backdrop-blur">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <div className="text-[11px] font-black uppercase text-[#a8ff8d]">Step 01</div>
+              <div className="text-[11px] font-black uppercase text-[#67e8f9]">Step 01</div>
               <h2 className="mt-1 text-xl font-black text-white">What do you want to do?</h2>
             </div>
           </div>
@@ -532,17 +532,17 @@ function WorkflowProgress({
   return (
     <div className="relative py-4 text-white">
       <div className="absolute left-4 right-4 top-7 h-px bg-white/12" />
-      <div className="absolute left-4 top-7 h-px bg-[#7eed61]/80 shadow-[0_0_18px_rgba(126,237,97,0.42)]" style={{ width: `calc((100% - 2rem) * ${progress / 100})` }} />
+      <div className="absolute left-4 top-7 h-px bg-[#22d3ee]/80 shadow-[0_0_18px_rgba(34,211,238,0.42)]" style={{ width: `calc((100% - 2rem) * ${progress / 100})` }} />
       <div className="relative grid grid-cols-7">
         {steps.map((step, index) => (
           <div key={step.label} className="flex flex-col items-center gap-2 px-1">
-            <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold backdrop-blur", step.complete ? "border-[#7eed61] bg-[#7eed61] text-black shadow-[0_0_18px_rgba(126,237,97,0.28)]" : "border-white/15 bg-[#07130f] text-white/35")}>
+            <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold backdrop-blur", step.complete ? "border-[#22d3ee] bg-[#22d3ee] text-black shadow-[0_0_18px_rgba(34,211,238,0.28)]" : "border-white/15 bg-[#020407] text-white/35")}>
               {step.complete ? <CheckCircle2 size={13} /> : index + 1}
             </span>
             <span className={cn("text-center text-[10px] font-bold sm:text-xs", step.complete ? "text-white/85" : "text-white/35")}>
               <span className="sm:hidden">{step.compactLabel}</span>
               <span className="hidden sm:inline">{step.label}</span>
-              {"status" in step && step.status && <span className="mt-0.5 block text-[9px] uppercase text-[#a8ff8d]/70">{step.status}</span>}
+              {"status" in step && step.status && <span className="mt-0.5 block text-[9px] uppercase text-[#67e8f9]/70">{step.status}</span>}
             </span>
           </div>
         ))}
@@ -555,7 +555,7 @@ function AgentTimeline({ trace, loading }: { trace: AgentResult[]; loading: bool
   const expected = ["IntentAgent", "RiskAgent", "RouteAgent", "ReportAgent", "VerificationAgent"];
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
-      <div className="text-[11px] font-black uppercase text-[#a8ff8d]">Agent mesh</div>
+      <div className="text-[11px] font-black uppercase text-[#67e8f9]">Agent mesh</div>
       <h2 className="mt-1 font-black text-white">Analysis trace</h2>
       <div className="mt-4 space-y-3">
         {expected.map((agent) => {
@@ -563,7 +563,7 @@ function AgentTimeline({ trace, loading }: { trace: AgentResult[]; loading: bool
           const active = loading && !item && agent === "IntentAgent";
           return (
             <div key={agent} className="flex gap-3 border-b border-white/8 py-3 last:border-b-0">
-              <div className={cn("mt-0.5 text-white/40", item?.status === "completed" && "text-[#a8ff8d]", item?.status === "warning" && "text-amber-200")}>
+              <div className={cn("mt-0.5 text-white/40", item?.status === "completed" && "text-[#67e8f9]", item?.status === "warning" && "text-amber-200")}>
                 {active ? <Loader2 className="animate-spin" size={18} /> : item ? <CheckCircle2 size={18} /> : <Bot size={18} />}
               </div>
               <div>

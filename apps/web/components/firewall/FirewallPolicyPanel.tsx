@@ -104,7 +104,7 @@ export function FirewallPolicyPanel({
             ["Recipient swap", sampleRecipientSubstitution],
             ["Unknown selector", sampleUnknownSelector]
           ].map(([label, factory]) => (
-            <button key={String(label)} type="button" onClick={() => onRawTransactionChange((factory as () => RawTransactionInput)())} className="rounded border border-teal/30 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-teal">
+            <button key={String(label)} type="button" onClick={() => onRawTransactionChange((factory as () => RawTransactionInput)())} className="rounded border border-teal/30 bg-cyan-50 px-2 py-1 text-[10px] font-bold text-teal">
               {String(label)}
             </button>
           ))}
@@ -246,7 +246,7 @@ function FirewallResult({ evaluation }: { evaluation: FirewallEvaluation }) {
 }
 
 function DecisionBadge({ decision, loading }: { decision?: FirewallEvaluation["decision"]; loading: boolean }) {
-  if (loading) return <span className="rounded bg-emerald-50 px-2 py-1 text-[10px] font-bold text-teal">CHECKING</span>;
+  if (loading) return <span className="rounded bg-cyan-50 px-2 py-1 text-[10px] font-bold text-teal">CHECKING</span>;
   const copy = decision ?? "READY";
   return (
     <span className={cn("inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-bold", badgeTone(decision))}>
@@ -304,13 +304,13 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 }
 
 function resultTone(decision: FirewallEvaluation["decision"]) {
-  if (decision === "ALLOW") return "border-success/20 bg-emerald-50 text-success";
+  if (decision === "ALLOW") return "border-success/20 bg-cyan-50 text-success";
   if (decision === "WARN") return "border-warning/20 bg-amber-50 text-warning";
   return "border-danger/20 bg-red-50 text-danger";
 }
 
 function badgeTone(decision?: FirewallEvaluation["decision"]) {
-  if (decision === "ALLOW") return "bg-emerald-50 text-success";
+  if (decision === "ALLOW") return "bg-cyan-50 text-success";
   if (decision === "WARN") return "bg-amber-50 text-warning";
   if (decision === "BLOCK") return "bg-red-50 text-danger";
   return "bg-panel2 text-muted";

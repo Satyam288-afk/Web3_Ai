@@ -12,7 +12,7 @@ export function MarketEvidence({ evidence }: { evidence?: MarketEvidenceType }) 
           <div className="eyebrow flex items-center gap-2"><Radio size={13} /> Market evidence</div>
           <h2 className="mt-1 font-semibold text-ink">{evidence.pair} on {evidence.chain}</h2>
         </div>
-        <span className={live ? "rounded bg-emerald-50 px-2 py-1 text-xs font-semibold text-success" : "rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-warning"}>
+        <span className={live ? "rounded bg-cyan-50 px-2 py-1 text-xs font-semibold text-success" : "rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-warning"}>
           {live ? "Live read-only data" : "Fixture fallback"}
         </span>
       </div>
@@ -45,7 +45,7 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
   return (
     <div className="bg-[#101d1a]/90 p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-white/55">{icon}{label}</div>
-      <div className="mt-1 text-sm font-semibold text-[#a8ff8d]">{value}</div>
+      <div className="mt-1 text-sm font-semibold text-[#67e8f9]">{value}</div>
     </div>
   );
 }

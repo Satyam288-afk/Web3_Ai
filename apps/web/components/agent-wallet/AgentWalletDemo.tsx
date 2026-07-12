@@ -180,7 +180,7 @@ export function AgentWalletDemo() {
                 }}
                 className={cn(
                   "rounded-lg border p-4 text-left transition hover:border-teal/50",
-                  selectedId === scenario.id ? "border-teal bg-emerald-50" : "border-border bg-white"
+                  selectedId === scenario.id ? "border-teal bg-cyan-50" : "border-border bg-white"
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -269,7 +269,7 @@ function AgentStatusCard({ evaluation, risk, loading }: { evaluation: FirewallEv
           <div className="eyebrow flex items-center gap-2"><PauseCircle size={14} /> Guardrail decision</div>
           <h2 className="mt-1 font-semibold text-ink">Agent status</h2>
         </div>
-        <span className={cn("rounded-md px-2 py-1 text-xs font-bold", !evaluation ? "bg-panel2 text-muted" : blocked ? "bg-red-50 text-danger" : evaluation.decision === "WARN" ? "bg-amber-50 text-warning" : "bg-emerald-50 text-success")}>
+        <span className={cn("rounded-md px-2 py-1 text-xs font-bold", !evaluation ? "bg-panel2 text-muted" : blocked ? "bg-red-50 text-danger" : evaluation.decision === "WARN" ? "bg-amber-50 text-warning" : "bg-cyan-50 text-success")}>
           {loading ? "RUNNING" : !evaluation ? "WAITING" : blocked ? "PAUSED" : evaluation.decision}
         </span>
       </div>
@@ -327,7 +327,7 @@ function AgentReputationCard({ evaluation }: { evaluation: FirewallEvaluation | 
           <div className="text-4xl font-semibold text-ink">{score ?? "--"}</div>
           <div className="mt-1 text-sm font-semibold text-muted">Reliability score</div>
         </div>
-        <span className={cn("rounded-md px-2 py-1 text-xs font-bold", score === undefined ? "bg-panel2 text-muted" : score >= 80 ? "bg-emerald-50 text-success" : score >= 55 ? "bg-amber-50 text-warning" : "bg-red-50 text-danger")}>
+        <span className={cn("rounded-md px-2 py-1 text-xs font-bold", score === undefined ? "bg-panel2 text-muted" : score >= 80 ? "bg-cyan-50 text-success" : score >= 55 ? "bg-amber-50 text-warning" : "bg-red-50 text-danger")}>
           {score === undefined ? "WAITING" : score >= 80 ? "TRUSTED" : score >= 55 ? "REVIEW" : "RESTRICTED"}
         </span>
       </div>
@@ -442,7 +442,7 @@ function AttestationCard({
         Save agent risk attestation
       </button>
       {report && (
-        <div className="mt-4 rounded-md border border-success/20 bg-emerald-50 p-4">
+        <div className="mt-4 rounded-md border border-success/20 bg-cyan-50 p-4">
           <div className="text-sm font-semibold text-success">Attestation saved</div>
           <p className="mt-1 text-xs leading-5 text-muted">Report hash {shortHash(report.reportHash)} is ready for local review or testnet anchoring.</p>
           <Link href={`/reports/${report.id}`} className="mt-3 inline-flex text-sm font-semibold text-teal underline">
@@ -460,17 +460,17 @@ function BrowserExtensionMock({ evaluation }: { evaluation: FirewallEvaluation }
     <div className="rounded-lg border border-border bg-ink p-5 text-white shadow-glow">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          <Monitor size={16} className="text-emerald-200" />
+          <Monitor size={16} className="text-cyan-200" />
           SentinelMesh signing guard
         </div>
-        <span className={cn("rounded px-2 py-1 text-[10px] font-bold", blocked ? "bg-red-400/20 text-red-100" : evaluation.decision === "WARN" ? "bg-amber-300/20 text-amber-100" : "bg-emerald-300/20 text-emerald-100")}>
+        <span className={cn("rounded px-2 py-1 text-[10px] font-bold", blocked ? "bg-red-400/20 text-red-100" : evaluation.decision === "WARN" ? "bg-amber-300/20 text-amber-100" : "bg-cyan-300/20 text-cyan-100")}>
           {evaluation.decision}
         </span>
       </div>
       <div className="mt-4 rounded-md bg-white/8 p-4">
-        <div className="text-xs text-emerald-100">Wallet is about to sign</div>
+        <div className="text-xs text-cyan-100">Wallet is about to sign</div>
         <p className="mt-2 text-sm font-semibold leading-6">{evaluation.transactionPreview.decodedAction}</p>
-        <p className="mt-2 text-xs leading-5 text-emerald-50/80">{evaluation.guardrailState.reason}</p>
+        <p className="mt-2 text-xs leading-5 text-cyan-50/80">{evaluation.guardrailState.reason}</p>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button type="button" className={cn("rounded-md px-3 py-2 text-sm font-semibold", blocked ? "bg-red-400 text-ink" : "bg-white/10 text-white")}>

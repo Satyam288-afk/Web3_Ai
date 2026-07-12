@@ -47,7 +47,7 @@ export function HeroThreatMesh3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_LIMIT));
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0xdff7e8, 8, 24);
+    scene.fog = new THREE.Fog(0x020617, 8, 24);
 
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
     camera.position.set(0, 1.1, 12);
@@ -57,7 +57,7 @@ export function HeroThreatMesh3D() {
 
     const points = createMeshPoints();
     const nodeGeometry = new THREE.SphereGeometry(0.055, 16, 16);
-    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0x16a37a });
+    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0x0ea5e9 });
     const nodes = new THREE.InstancedMesh(nodeGeometry, nodeMaterial, points.length);
     const matrix = new THREE.Matrix4();
     points.forEach((point, index) => {
@@ -69,7 +69,7 @@ export function HeroThreatMesh3D() {
 
     const linkGeometry = new THREE.BufferGeometry();
     const linkMaterial = new THREE.LineBasicMaterial({
-      color: 0x15a77b,
+      color: 0x0284c7,
       transparent: true,
       opacity: 0.22
     });
@@ -79,8 +79,8 @@ export function HeroThreatMesh3D() {
     const core = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.06, 1),
       new THREE.MeshStandardMaterial({
-        color: 0x0d3a2e,
-        emissive: 0x16a37a,
+        color: 0x0b1730,
+        emissive: 0x0ea5e9,
         emissiveIntensity: 0.28,
         metalness: 0.25,
         roughness: 0.42,
@@ -103,7 +103,7 @@ export function HeroThreatMesh3D() {
     group.add(innerCore);
 
     const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0x37d4a1,
+      color: 0x22d3ee,
       transparent: true,
       opacity: 0.32,
       side: THREE.DoubleSide
@@ -143,7 +143,7 @@ export function HeroThreatMesh3D() {
     group.add(dangerNodes);
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.75));
-    const key = new THREE.DirectionalLight(0xbdf8df, 2.4);
+    const key = new THREE.DirectionalLight(0xbfdbfe, 2.4);
     key.position.set(4, 6, 7);
     scene.add(key);
     const violet = new THREE.PointLight(0x8b5cf6, 8, 20);
@@ -216,7 +216,7 @@ export function HeroThreatMesh3D() {
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       {webglUnavailable ? (
         <div className="h-full w-full" data-testid="hero-threat-mesh-fallback">
-          <div className="absolute left-[44%] top-[38%] h-32 w-32 rotate-45 rounded-2xl border border-teal/25 bg-teal/10 shadow-[0_0_90px_rgba(19,138,97,0.24)]" />
+          <div className="absolute left-[44%] top-[38%] h-32 w-32 rotate-45 rounded-2xl border border-teal/25 bg-teal/10 shadow-[0_0_90px_rgba(8,145,178,0.24)]" />
           <div className="absolute left-[56%] top-[28%] h-4 w-4 rounded-full bg-teal/30" />
           <div className="absolute left-[68%] top-[47%] h-3 w-3 rounded-full bg-violet/30" />
           <div className="absolute left-[40%] top-[61%] h-px w-96 rotate-12 bg-teal/20" />
@@ -225,7 +225,7 @@ export function HeroThreatMesh3D() {
       ) : (
         <canvas ref={canvasRef} data-testid="hero-threat-mesh-canvas" className="h-full w-full" />
       )}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(124,58,237,0.18),transparent_28%),radial-gradient(circle_at_52%_38%,rgba(20,184,166,0.20),transparent_34%),linear-gradient(90deg,rgba(238,248,241,0.98)_0%,rgba(238,248,241,0.80)_42%,rgba(238,248,241,0.22)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(124,58,237,0.18),transparent_28%),radial-gradient(circle_at_52%_38%,rgba(14,165,233,0.20),transparent_34%),linear-gradient(90deg,rgba(2,6,23,0.98)_0%,rgba(2,6,23,0.80)_42%,rgba(2,6,23,0.22)_100%)]" />
       <div className="absolute inset-0 mesh-grid opacity-70" />
     </div>
   );

@@ -123,8 +123,8 @@ export function Providers({ children }: { children: ReactNode }) {
           <RainbowKitAuthenticationProvider adapter={authAdapter} status={authStatus}>
             <RainbowKitProvider
               theme={darkTheme({
-                accentColor: "#7eed61",
-                accentColorForeground: "#07130f",
+                accentColor: "#22d3ee",
+                accentColorForeground: "#020407",
                 borderRadius: "medium",
                 overlayBlur: "small"
               })}

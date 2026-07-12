@@ -8,10 +8,10 @@ export function SafetyCertificate({ evaluation }: { evaluation: FirewallEvaluati
   const { safetyEnvelope: envelope, intentCompliance: compliance, safetyDelta: delta } = evaluation;
 
   return (
-    <section className="border-y border-[#7eed61]/20 py-6 text-white">
+    <section className="border-y border-[#22d3ee]/20 py-6 text-white">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#a8ff8d]">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#67e8f9]">
             <ShieldCheck size={15} /> Proof of safe execution
           </div>
           <h2 className="mt-2 text-xl font-black">Intent compliance certificate</h2>
@@ -19,7 +19,7 @@ export function SafetyCertificate({ evaluation }: { evaluation: FirewallEvaluati
             Deterministic constraints derived from the reviewed intent, active policy, quote evidence, and supplied calldata.
           </p>
         </div>
-        <div className={cn("text-right", compliance.status === "BLOCKED" ? "text-red-300" : compliance.status === "COMPLIANT" ? "text-[#a8ff8d]" : "text-amber-200")}>
+        <div className={cn("text-right", compliance.status === "BLOCKED" ? "text-red-300" : compliance.status === "COMPLIANT" ? "text-[#67e8f9]" : "text-amber-200")}>
           <div className="text-xs font-black uppercase tracking-wider">{compliance.status.replaceAll("_", " ")}</div>
           <div className="mt-1 text-3xl font-black">{compliance.passedChecks}/{compliance.totalChecks}</div>
           <div className="text-[11px] text-white/45">constraints proven</div>
@@ -30,7 +30,7 @@ export function SafetyCertificate({ evaluation }: { evaluation: FirewallEvaluati
         {compliance.checks.map((check) => (
           <div key={check.checkId} className="flex items-start gap-3 border-b border-white/8 py-3">
             {check.status === "pass" ? (
-              <CheckCircle2 className="mt-0.5 shrink-0 text-[#7eed61]" size={17} />
+              <CheckCircle2 className="mt-0.5 shrink-0 text-[#22d3ee]" size={17} />
             ) : check.status === "fail" ? (
               <XCircle className="mt-0.5 shrink-0 text-red-300" size={17} />
             ) : (
@@ -62,7 +62,7 @@ export function SafetyCertificate({ evaluation }: { evaluation: FirewallEvaluati
         <div>
           <div className="flex items-center justify-between gap-3">
             <div className="text-[11px] font-black uppercase tracking-wider text-white/40">Safety delta</div>
-            <span className="text-sm font-black text-[#a8ff8d]">−{delta.riskReduction} risk points</span>
+            <span className="text-sm font-black text-[#67e8f9]">−{delta.riskReduction} risk points</span>
           </div>
           <div className="mt-3 flex items-end gap-3">
             <div>
@@ -71,13 +71,13 @@ export function SafetyCertificate({ evaluation }: { evaluation: FirewallEvaluati
             </div>
             <div className="pb-2 text-white/25">→</div>
             <div>
-              <div className="text-[10px] uppercase text-[#a8ff8d]/70">Policy-adjusted</div>
-              <div className="text-3xl font-black text-[#a8ff8d]">{delta.protectedRiskScore}</div>
+              <div className="text-[10px] uppercase text-[#67e8f9]/70">Policy-adjusted</div>
+              <div className="text-3xl font-black text-[#67e8f9]">{delta.protectedRiskScore}</div>
             </div>
           </div>
           <ul className="mt-4 space-y-2 text-xs leading-5 text-white/55">
             {delta.improvements.map((improvement) => (
-              <li key={improvement} className="flex gap-2"><CircleDashed className="mt-1 shrink-0 text-[#7eed61]" size={12} /> {improvement}</li>
+              <li key={improvement} className="flex gap-2"><CircleDashed className="mt-1 shrink-0 text-[#22d3ee]" size={12} /> {improvement}</li>
             ))}
           </ul>
           <p className="mt-3 text-[10px] leading-4 text-white/30">

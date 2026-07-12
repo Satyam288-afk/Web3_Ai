@@ -9,7 +9,7 @@ export function RecommendedRouteBadge({ route }: { route: RouteOption }) {
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold",
-        route.decision === "recommended" && "border-success/20 bg-emerald-50 text-success",
+        route.decision === "recommended" && "border-success/20 bg-cyan-50 text-success",
         route.decision === "report-only" && "border-warning/20 bg-amber-50 text-warning",
         route.decision === "fallback" && "border-danger/20 bg-red-50 text-danger",
         route.decision === "available" && "border-border bg-panel2 text-muted",

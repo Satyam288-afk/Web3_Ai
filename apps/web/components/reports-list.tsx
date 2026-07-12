@@ -187,7 +187,7 @@ function Status({ status }: { status: SentinelReport["verificationStatus"] }) {
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs",
-        verified ? "border-success/20 bg-emerald-50 text-success" : "border-border bg-panel2 text-muted"
+        verified ? "border-success/20 bg-cyan-50 text-success" : "border-border bg-panel2 text-muted"
       )}
     >
       <BadgeCheck size={13} />
@@ -211,7 +211,7 @@ function State({
 }) {
   return (
     <div className={cn("surface rounded-lg p-8 text-center", tone === "danger" && "border-danger/30")}>
-      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-md border border-border bg-emerald-50 text-teal">
+      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-md border border-border bg-cyan-50 text-teal">
         {icon}
       </div>
       <h2 className="mt-4 font-semibold text-ink">{title}</h2>

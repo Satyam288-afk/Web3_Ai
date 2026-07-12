@@ -45,7 +45,7 @@ export function ProductSettings() {
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section className="surface rounded-lg p-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-teal"><Settings2 size={20} /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50 text-teal"><Settings2 size={20} /></span>
           <div>
             <h2 className="font-semibold text-ink">Default execution mode</h2>
             <p className="mt-1 text-xs text-muted">Applied when the copilot workspace opens.</p>
@@ -59,7 +59,7 @@ export function ProductSettings() {
               onClick={() => selectMode(option.value)}
               className={cn(
                 "min-h-36 rounded-lg border p-4 text-left transition",
-                mode === option.value ? "border-teal bg-emerald-50 ring-2 ring-teal/10" : "border-border bg-white hover:border-teal/35"
+                mode === option.value ? "border-teal bg-cyan-50 ring-2 ring-teal/10" : "border-border bg-white hover:border-teal/35"
               )}
             >
               <div className="flex items-center justify-between gap-3">

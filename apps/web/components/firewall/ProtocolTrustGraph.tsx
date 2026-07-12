@@ -19,7 +19,7 @@ export function ProtocolTrustGraph({ evaluation }: { evaluation?: FirewallEvalua
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">Protocol trust graph</div>
           <h3 className="mt-1 text-sm font-semibold text-ink">{evaluation ? "Signing path" : "Pre-signing preview"}</h3>
         </div>
-        <span className={cn("rounded px-2 py-1 text-[10px] font-bold", evaluation ? decisionTone(evaluation.decision) : "bg-emerald-50 text-teal")}>
+        <span className={cn("rounded px-2 py-1 text-[10px] font-bold", evaluation ? decisionTone(evaluation.decision) : "bg-cyan-50 text-teal")}>
           {evaluation?.decision ?? "WAITING"}
         </span>
       </div>
@@ -106,7 +106,7 @@ function nodeTone(tone: GraphNode["tone"]) {
 }
 
 function decisionTone(decision: FirewallEvaluation["decision"]) {
-  if (decision === "ALLOW") return "bg-emerald-50 text-success";
+  if (decision === "ALLOW") return "bg-cyan-50 text-success";
   if (decision === "WARN") return "bg-amber-50 text-warning";
   return "bg-red-50 text-danger";
 }

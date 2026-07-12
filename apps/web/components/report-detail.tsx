@@ -382,7 +382,7 @@ function verificationCopy(report: SentinelReport) {
     return {
       label: "Verified on-chain",
       description: "The canonical local report hash matches the hash read from SentinelReportRegistry for this wallet.",
-      className: "border-success/20 bg-emerald-50 text-success",
+      className: "border-success/20 bg-cyan-50 text-success",
       icon: BadgeCheck
     };
   }
@@ -411,13 +411,13 @@ function verificationCopy(report: SentinelReport) {
 }
 
 function firewallTone(decision: "ALLOW" | "WARN" | "BLOCK") {
-  if (decision === "ALLOW") return "border-success/20 bg-emerald-50 text-success";
+  if (decision === "ALLOW") return "border-success/20 bg-cyan-50 text-success";
   if (decision === "WARN") return "border-warning/20 bg-amber-50 text-amber-900";
   return "border-danger/20 bg-red-50 text-danger";
 }
 
 function outcomeTone(status: NonNullable<SentinelReport["executionOutcome"]>["status"]) {
-  if (status === "VERIFIED_COMPLIANT") return "border-success/20 bg-emerald-50 text-success";
+  if (status === "VERIFIED_COMPLIANT") return "border-success/20 bg-cyan-50 text-success";
   if (status === "EXECUTION_DRIFT") return "border-danger/20 bg-red-50 text-danger";
   return "border-warning/20 bg-amber-50 text-warning";
 }

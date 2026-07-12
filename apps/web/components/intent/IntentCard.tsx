@@ -47,7 +47,7 @@ export function IntentCard({
     <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.18)] backdrop-blur">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[11px] font-black uppercase text-[#a8ff8d]">Step 02</div>
+          <div className="text-[11px] font-black uppercase text-[#67e8f9]">Step 02</div>
           <h2 className="mt-1 font-black text-white">Review parsed intent</h2>
           <p className="mt-1 text-xs text-white/50">Corrections reset downstream analysis so the report remains internally consistent.</p>
         </div>
@@ -82,7 +82,7 @@ export function IntentCard({
           type="button"
           onClick={onAnalyze}
           disabled={analyzing}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#7eed61] px-4 py-2.5 text-sm font-black text-black hover:bg-[#a8ff8d] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#22d3ee] px-4 py-2.5 text-sm font-black text-black hover:bg-[#67e8f9] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {analyzing ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
           {analyzing ? "Analyzing..." : "Analyze risk"}
@@ -99,7 +99,7 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 p-2.5 text-sm text-white outline-none focus:border-[#7eed61]/50"
+        className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 p-2.5 text-sm text-white outline-none focus:border-[#22d3ee]/50"
       />
     </label>
   );
@@ -124,7 +124,7 @@ function SelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 p-2.5 text-sm text-white outline-none focus:border-[#7eed61]/50"
+        className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 p-2.5 text-sm text-white outline-none focus:border-[#22d3ee]/50"
       >
         {options.map((option) => (
           <option key={option || "empty"} value={option}>
