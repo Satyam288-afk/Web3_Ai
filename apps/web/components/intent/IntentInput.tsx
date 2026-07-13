@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowUp, Loader2, Play, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUp, Loader2, Sparkles } from "lucide-react";
 
 export const intentExamples = [
   {
@@ -61,16 +61,7 @@ export function IntentInput({
         rows={3}
         className="w-full resize-none border-0 border-b border-white/15 bg-transparent px-0 py-5 text-xl leading-8 text-white outline-none placeholder:text-white/35 focus:border-blue-500"
       />
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={() => onSubmit(intentExamples[0].prompt)}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:border-cyan-300/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Play size={14} />
-          Use demo transaction
-        </button>
+      <div className="mt-4 flex justify-end border-t border-white/10 pt-4">
         <button
           type="button"
           onClick={() => onSubmit()}
@@ -83,7 +74,7 @@ export function IntentInput({
       </div>
       <div className="mt-3 flex items-center gap-2 text-[11px] text-white/40">
         <Sparkles size={13} className="text-[#67e8f9]" />
-        Deterministic analysis with live-data fallback. Press Cmd/Ctrl + Enter to submit.
+        Deterministic analysis with a clearly labeled live-data fallback. Press Cmd/Ctrl + Enter to submit.
       </div>
 
       {error && (

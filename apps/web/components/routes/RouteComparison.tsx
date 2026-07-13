@@ -16,8 +16,8 @@ export function RouteComparison({
   onSelect: (routeId: string) => void;
 }) {
   return (
-    <section className="surface rounded-lg p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section className="border-y border-white/10 py-6 text-white">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Route className="text-violet" size={20} />
           <div>
@@ -29,14 +29,14 @@ export function RouteComparison({
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 rounded-md border border-border bg-panel2 p-4 text-sm text-muted">
+        <div className="mt-5 flex items-center gap-2 border-l-2 border-[#22d3ee] pl-4 text-sm text-white/55">
           <Loader2 className="animate-spin text-teal" size={18} />
-          Comparing deterministic fixture routes...
+          Comparing route options...
         </div>
       )}
 
       {!loading && error && (
-        <div className="rounded-md border border-danger/20 bg-red-50 p-4 text-sm text-danger">
+        <div className="mt-5 border-l-2 border-danger/70 pl-4 text-sm text-danger">
           <div className="flex items-center gap-2 font-semibold">
             <AlertTriangle size={17} />
             Route analysis failed
@@ -48,8 +48,8 @@ export function RouteComparison({
       {!loading && !error && !routeAnalysis && <p className="text-sm text-muted">Run risk analysis to compare route options.</p>}
 
       {!loading && !error && routeAnalysis && (
-        <div className="space-y-4">
-          <div className="rounded-md border border-violet/15 bg-violet/5 p-4 text-sm leading-6 text-muted">
+        <div className="mt-5 space-y-5">
+          <div className="border-l-2 border-violet/70 pl-4 text-sm leading-6 text-white/60">
             {routeAnalysis.decisionSummary}
           </div>
           <RouteSelection routeAnalysis={routeAnalysis} selectedRouteId={selectedRouteId} onSelect={onSelect} />

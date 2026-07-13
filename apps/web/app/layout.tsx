@@ -24,11 +24,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <span>SentinelMesh</span>
                   <span className="hidden rounded border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-[10px] font-semibold text-white/45 sm:inline">TESTNET</span>
                 </Link>
-                <nav className="flex items-center gap-1 text-sm text-white/50">
-                  <Link className="hidden rounded-md px-3 py-2 hover:text-white md:inline-flex" href="/#how-it-works">How it works</Link>
-                  <Link className="hidden rounded-md px-3 py-2 hover:text-white md:inline-flex" href="/#analysis">Analysis</Link>
-                  <Link className="hidden rounded-md px-3 py-2 hover:text-white md:inline-flex" href="/reports">Reports</Link>
-                  <Link className="ml-2 inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold text-black hover:bg-cyan-50 sm:px-5" href="/app">Open app</Link>
+                <nav aria-label="Primary navigation" className="flex items-center gap-0.5 text-xs text-white/55 sm:gap-1 sm:text-sm">
+                  <Link className="rounded-full px-2.5 py-2 transition hover:bg-white/[0.06] hover:text-white sm:px-3" href="/#how-it-works">How it works</Link>
+                  <Link className="rounded-full px-2.5 py-2 transition hover:bg-white/[0.06] hover:text-white sm:px-3" href="/#analysis">Analysis</Link>
+                  <Link className="rounded-full px-2.5 py-2 transition hover:bg-white/[0.06] hover:text-white sm:px-3" href="/reports">Reports</Link>
                 </nav>
               </div>
             </header>

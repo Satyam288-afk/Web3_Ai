@@ -22,7 +22,7 @@ export function QuotePreviewPanel({
   if (!loading && !quote && !error) return null;
 
   return (
-    <section className="surface rounded-lg p-5">
+    <section className="border-y border-white/10 py-6 text-white">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <DatabaseZap className="text-teal" size={20} />
@@ -38,14 +38,14 @@ export function QuotePreviewPanel({
       </div>
 
       {loading && (
-        <div className="mt-4 flex items-center gap-2 rounded-md border border-border bg-panel2 p-4 text-sm text-muted">
+        <div className="mt-5 flex items-center gap-2 border-l-2 border-[#22d3ee] pl-4 text-sm text-white/55">
           <Loader2 className="animate-spin text-teal" size={18} />
           Checking executable liquidity and simulation evidence...
         </div>
       )}
 
       {!loading && (error || quote?.status !== "live") && (
-        <div className="mt-4 rounded-md border border-border bg-panel2 p-4">
+        <div className="mt-5 border-l-2 border-amber-300/70 pl-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-ink">
             <Clock3 className="text-muted" size={17} />
             Live quote unavailable
