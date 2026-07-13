@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { privateKeyToAccount } from "viem/accounts";
 import { createSiweMessage } from "viem/siwe";
+import { recomputeReportHash } from "@sentinelmesh/agents";
+import type { SentinelReport } from "@sentinelmesh/shared";
 
 const account = privateKeyToAccount("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
 const intent = {
@@ -56,6 +58,21 @@ test("API enforces SIWE ownership, server-authoritative reports, and history pri
     assert.notEqual(anonymousReport.riskScore, 1);
     assert.equal(anonymousReport.firewallEvaluation?.decision, "ALLOW");
     assert.match(anonymousReport.evidenceReceipt?.evidenceHash ?? "", /^0x[a-f0-9]{64}$/);
+
+    const exportSource = await fetch(`${baseUrl}/reports/${anonymousReport.id}`).then((response) => response.json()) as SentinelReport;
+    const importedReport: SentinelReport = {
+      ...exportSource,
+      id: "imported-safe-report",
+      reportURI: "sentinelmesh://reports/imported-safe-report",
+      verificationStatus: "local-only"
+    };
+    importedReport.reportHash = recomputeReportHash(importedReport);
+    const imported = await post(baseUrl, "/reports/import", { report: importedReport });
+    assert.equal(imported.status, 201);
+    const tamperedImport = await post(baseUrl, "/reports/import", {
+      report: { ...importedReport, id: "tampered-import", originalPrompt: "Swap a tampered amount" }
+    });
+    assert.equal(tamperedImport.status, 400);
 
     const quote = await post(baseUrl, "/api/quote", { intent });
     assert.equal(quote.status, 200);

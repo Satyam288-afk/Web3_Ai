@@ -657,6 +657,12 @@ export const ReportCreateRequestSchema = z
   })
   .strict();
 
+export const ReportImportRequestSchema = z
+  .object({
+    report: z.record(z.string(), z.unknown())
+  })
+  .strict();
+
 export type ExecutionMode = "Simulation Only" | "Report On-chain";
 
 export type SentinelReport = {

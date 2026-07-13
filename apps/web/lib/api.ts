@@ -161,6 +161,12 @@ export const api = {
       body: JSON.stringify(input)
     });
   },
+  importReport(report: SentinelReport) {
+    return request<SentinelReport>("/reports/import", {
+      method: "POST",
+      body: JSON.stringify({ report })
+    });
+  },
   listReports() {
     return request<SentinelReport[]>("/reports");
   },

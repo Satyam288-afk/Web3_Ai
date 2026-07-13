@@ -24,12 +24,14 @@ import { analyzeRisk, recommendRoute } from "@sentinelmesh/risk-engine";
 import { sentinelReportRegistryAbi, supportedChains } from "@sentinelmesh/web3";
 import {
   DeFiIntentRequestSchema,
+  DeFiIntentSchema,
   FirewallEvaluateRequestSchema,
   IntentPromptSchema,
   OrchestrationRunRequestSchema,
   QuotePreviewRequestSchema,
   RawTransactionDecodeRequestSchema,
   ReportCreateRequestSchema,
+  ReportImportRequestSchema,
   RouteAgentRequestSchema,
   type AgentResult,
   type DeFiIntent,
@@ -515,6 +517,116 @@ app.post("/reports", async (req, res, next) => {
     next(error);
   }
 });
+
+app.post("/reports/import", async (req, res, next) => {
+  try {
+    const { report: rawReport } = ReportImportRequestSchema.parse(req.body);
+    const report = parseImportedReport(rawReport);
+    const session = getAuthSession(req);
+    if (report.userAddress && !session) {
+      return res.status(401).json({ error: "Wallet authentication is required to import a wallet-owned report" });
+    }
+    if (report.userAddress && session?.address.toLowerCase() !== report.userAddress.toLowerCase()) {
+      return res.status(403).json({ error: "Authenticated wallet does not match the imported report owner" });
+    }
+    if (recomputeReportHash(report).toLowerCase() !== report.reportHash.toLowerCase()) {
+      return res.status(400).json({ error: "Report hash does not match the uploaded report contents" });
+    }
+
+    const { repository } = await reportRepositoryPromise;
+    if (await repository.get(report.id)) {
+      return res.status(409).json({ error: "A report with this ID already exists in history" });
+    }
+
+    report.verificationStatus = "local-only";
+    await repository.insert(report);
+    return res.status(201).json(report);
+  } catch (error) {
+    next(error);
+  }
+});
+
+function parseImportedReport(value: Record<string, unknown>): SentinelReport {
+  const report = value as Partial<SentinelReport>;
+  if (typeof report.id !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(report.id)) {
+    throw new Error("Uploaded report has an invalid ID");
+  }
+  IntentPromptSchema.parse({ prompt: report.originalPrompt });
+  DeFiIntentSchema.parse(report.parsedIntent);
+  const riskScore = report.riskScore;
+  if (typeof riskScore !== "number" || !Number.isInteger(riskScore) || riskScore < 0 || riskScore > 100) {
+    throw new Error("Uploaded report has an invalid risk score");
+  }
+  if (!isRiskLevel(report.riskLevel) || !isRiskFactors(report.riskFactors)) {
+    throw new Error("Uploaded report has invalid risk factors");
+  }
+  if (!isRouteRecommendation(report.recommendedRoute)) {
+    throw new Error("Uploaded report has an invalid route recommendation");
+  }
+  if (!isRiskFactorExplanations(report.riskFactorExplanations) || !isAgentTrace(report.agentTrace)) {
+    throw new Error("Uploaded report has invalid analysis details");
+  }
+  if (typeof report.modelVersion !== "string" || report.modelVersion.length === 0 || report.modelVersion.length > 160) {
+    throw new Error("Uploaded report has an invalid model version");
+  }
+  const reportHash = report.reportHash;
+  if (!reportHash || !isHash(reportHash) || typeof report.reportURI !== "string" || report.reportURI.length === 0 || report.reportURI.length > 2048) {
+    throw new Error("Uploaded report has an invalid report hash or URI");
+  }
+  if (typeof report.createdAt !== "string" || Number.isNaN(Date.parse(report.createdAt))) {
+    throw new Error("Uploaded report has an invalid creation timestamp");
+  }
+  if (report.userAddress && !isAddress(report.userAddress)) throw new Error("Uploaded report has an invalid wallet address");
+  if (report.chainTxHash && !isHash(report.chainTxHash)) throw new Error("Uploaded report has an invalid transaction hash");
+  return report as SentinelReport;
+}
+
+function isRiskLevel(value: unknown): value is RiskAnalysis["riskLevel"] {
+  return value === "Low" || value === "Medium" || value === "High" || value === "Critical";
+}
+
+function isRiskFactors(value: unknown): value is RiskAnalysis["riskFactors"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return ["slippageRisk", "liquidityRisk", "priceImpactRisk", "gasRisk", "tokenRisk", "routeComplexityRisk", "mevExposureRisk"].every((key) => {
+    const score = (value as Record<string, unknown>)[key];
+    return typeof score === "number" && Number.isFinite(score) && score >= 0 && score <= 100;
+  });
+}
+
+function isRouteRecommendation(value: unknown): value is RouteRecommendation {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const route = value as Partial<RouteRecommendation>;
+  return (
+    ["STANDARD_ROUTE", "PROTECTED_ROUTE", "DELAYED_EXECUTION", "SPLIT_ORDER", "BLOCKED_UNSAFE"].includes(route.recommendedRoute ?? "") &&
+    Array.isArray(route.alternatives) && route.alternatives.every((routeType) => typeof routeType === "string") &&
+    Array.isArray(route.pros) && route.pros.every((item) => typeof item === "string") &&
+    Array.isArray(route.cons) && route.cons.every((item) => typeof item === "string") &&
+    typeof route.explanation === "string"
+  );
+}
+
+function isRiskFactorExplanations(value: unknown): value is SentinelReport["riskFactorExplanations"] {
+  return Array.isArray(value) && value.length <= 7 && value.every((factor) => {
+    if (!factor || typeof factor !== "object" || Array.isArray(factor)) return false;
+    const entry = factor as Record<string, unknown>;
+    return typeof entry.key === "string" && typeof entry.label === "string" && typeof entry.score === "number" && typeof entry.explanation === "string";
+  });
+}
+
+function isAgentTrace(value: unknown): value is SentinelReport["agentTrace"] {
+  const statuses = new Set(["pending", "running", "completed", "warning", "failed"]);
+  return Array.isArray(value) && value.length <= 20 && value.every((agent) => {
+    if (!agent || typeof agent !== "object" || Array.isArray(agent)) return false;
+    const entry = agent as Record<string, unknown>;
+    return (
+      typeof entry.agentName === "string" &&
+      typeof entry.status === "string" && statuses.has(entry.status) &&
+      typeof entry.confidence === "number" &&
+      Array.isArray(entry.reasoning) && entry.reasoning.every((reason) => typeof reason === "string") &&
+      typeof entry.timestamp === "string"
+    );
+  });
+}
 
 function routeOptionToRecommendation(analysis: RouteAnalysis, selected: RouteOption): RouteRecommendation {
   return {

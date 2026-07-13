@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, BadgeCheck, Clock, Download, FileText, Link2, Loader2, Search } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, BadgeCheck, Clock, Download, FileText, Link2, Loader2, Search, Upload } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SentinelReport } from "@sentinelmesh/shared";
 import { api } from "@/lib/api";
 import { cn, riskColor, shortHash } from "@/lib/format";
@@ -14,6 +14,9 @@ export function ReportsList() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<SentinelReport["verificationStatus"] | "all">("all");
   const [copiedReportId, setCopiedReportId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api
@@ -47,6 +50,25 @@ export function ReportsList() {
     [reports]
   );
 
+  async function importReport(file: File) {
+    if (file.size > 1_000_000) {
+      setImportMessage("Report files must be 1 MB or smaller.");
+      return;
+    }
+    setImporting(true);
+    setImportMessage(null);
+    try {
+      const parsed = JSON.parse(await file.text()) as SentinelReport;
+      const imported = await api.importReport(parsed);
+      setReports((current) => [imported, ...current]);
+      setImportMessage("Report imported. Local hash integrity was verified.");
+    } catch (err) {
+      setImportMessage(err instanceof Error ? err.message : "Could not import this report.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   if (loading) {
     return <State icon={<Loader2 className="animate-spin" />} title="Loading reports" body="Reading local API storage." />;
   }
@@ -60,14 +82,68 @@ export function ReportsList() {
       <State
         icon={<FileText />}
         title="No reports yet"
-        body="Run the copilot flow and generate a report to populate history."
-        action={<Link className="mt-4 inline-flex rounded-md bg-teal px-4 py-2 text-sm font-semibold text-slate-950" href="/app">Open Copilot</Link>}
+        body="Generate a report in the copilot or import a verified SentinelMesh JSON report to populate history."
+        action={
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              disabled={importing}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md border border-[#7b6dff]/45 bg-[#5d50e8]/15 px-4 py-2 text-sm font-semibold text-[#c4bdff] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {importing ? <Loader2 className="animate-spin" size={15} /> : <Upload size={15} />}
+              Upload JSON
+            </button>
+            <Link className="inline-flex rounded-md bg-teal px-4 py-2 text-sm font-semibold text-slate-950" href="/app">Open Copilot</Link>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.currentTarget.value = "";
+                if (file) void importReport(file);
+              }}
+            />
+            {importMessage && <p className={cn("w-full text-xs", importMessage.startsWith("Report imported") ? "text-success" : "text-danger")}>{importMessage}</p>}
+          </div>
+        }
       />
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-3 border-y border-white/10 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-semibold text-white">Import a report</div>
+          <p className="mt-1 text-xs text-white/50">Upload a SentinelMesh JSON report. Its local report hash is checked before it is added to history.</p>
+        </div>
+        <div className="shrink-0">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void importReport(file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={importing}
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-full border border-[#7b6dff]/45 bg-[#5d50e8]/15 px-4 py-2.5 text-sm font-semibold text-[#c4bdff] transition hover:bg-[#5d50e8]/25 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {importing ? <Loader2 className="animate-spin" size={15} /> : <Upload size={15} />}
+            {importing ? "Checking report..." : "Upload JSON"}
+          </button>
+        </div>
+      </div>
+      {importMessage && <p className={cn("text-xs", importMessage.startsWith("Report imported") ? "text-success" : "text-danger")}>{importMessage}</p>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Summary label="Total" value={counts.total} />
         <Summary label="Verified" value={counts.verified} tone="success" />
